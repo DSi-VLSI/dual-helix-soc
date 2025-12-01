@@ -1,1 +1,1 @@
-![DuSH](documents/svg/DHS-ARCH-DIAGRAM_svg.svg)
+![alt text](documents/svg/DHS-ARCH-DIAGRAM.svg)
