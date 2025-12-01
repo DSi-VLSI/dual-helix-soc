@@ -82,3 +82,17 @@ The goal is to be able to compile and run bare-metal programs against the RTL:
 - Assembly/C test flow: TODO.
 
 This README will be refined as the RTL, testbench, and software infrastructure are implemented.
+
+## OBI-2-AXI Bridge Overview
+
+The **OBI-2-AXI Bridge** is a key component in the SoC design, enabling seamless communication between the Open Bus Interface (OBI) and AXI-based peripherals or memory systems. This bridge ensures compatibility with industry-standard AXI devices while maintaining high performance and flexibility.
+
+### Features of the OBI-2-AXI Bridge:
+- **Protocol Conversion**: Translates OBI transactions into AXI-compliant transactions.
+- **Performance Optimization**: Incorporates buffering and pipelining to reduce latency and improve throughput.
+- **Configurable Design**: Supports parameterized data widths and address widths to adapt to various system requirements.
+- **Error Detection**: Includes mechanisms to detect and report protocol violations or unsupported transactions.
+
+The diagram below provides a high-level view of the OBI-2-AXI Bridge architecture:
+
+![OBI-2-AXI BLOCK DIAGRAM](documents/svg/OBI-2-AXI-BLOCK-DIAGRAM.svg)
