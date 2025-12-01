@@ -1,0 +1,9 @@
+[submodule "submodule/cv32e40p"]
+	path = submodule/cv32e40p
+	url = https://github.com/openhwgroup/cv32e40p.git
+[submodule "submodule/cvfpu"]
+	path = submodule/cvfpu
+	url = https://github.com/openhwgroup/cvfpu.git
+[submodule "submodule/common_cells"]
+	path = submodule/common_cells
+	url = https://github.com/pulp-platform/common_cells.git
