@@ -11,25 +11,6 @@ Dual Helix SoC (DHS) is a small, experimental System-on-Chip project intended as
 - Develop a reusable testbench environment for block-level and SoC-level verification.
 - Run assembly and C programs on the SoC via simulation (and later, optionally, FPGA).
 
-## Repository Structure (Planned)
-
-The structure will evolve, but the high-level layout is:
-
-- `rtl/` – synthesizable RTL code
-	- `core/` – CPU core, pipeline, register file, ALU, control
-	- `soc/` – top-level SoC, interconnect, memory map, peripherals
-	- `ip/` – reusable IPs (UART, timer, GPIO, etc.)
-- `tb/` – verification environment and testbenches
-	- `unit/` – unit-level testbenches for individual blocks (ALU, regfile, etc.)
-	- `soc/` – full SoC testbench, memory models, simple bus agents
-- `sw/` – software tests that run on the RTL
-	- `asm/` – hand-written assembly tests
-	- `c/` – C tests compiled and linked for the SoC
-	- `linker/` – linker scripts, startup code, memory map definitions
-- `sim/` – simulation scripts and configuration
-- `docs/` – design notes, diagrams, and specs
-	- `svg/` – architecture and block diagrams (includes `DHS-ARCH-DIAGRAM.svg`)
-
 ## Design Overview
 
 The high-level architecture is shown above in `documents/svg/DHS-ARCH-DIAGRAM.svg`. At a minimum, the SoC is expected to include:
@@ -96,8 +77,8 @@ The goal is to be able to compile and run bare-metal programs against the RTL:
 ## Status
 
 - Architecture definition: in progress.
-- RTL implementation: planned.
-- Testbench environment: planned.
-- Assembly/C test flow: planned.
+- RTL implementation: TODO.
+- Testbench environment: TODO.
+- Assembly/C test flow: TODO.
 
 This README will be refined as the RTL, testbench, and software infrastructure are implemented.
