@@ -1,4 +1,4 @@
-![Dual Helix SoC Architecture](documents/svg/DHS-ARCH-DIAGRAM.svg)
+![Dual Helix SoC Architecture](document/svg/DHS-ARCH-DIAGRAM.svg)
 
 # Dual Helix SoC
 
@@ -13,7 +13,7 @@ Dual Helix SoC (DHS) is a small, experimental System-on-Chip project intended as
 
 ## Design Overview
 
-The high-level architecture is shown above in `documents/svg/DHS-ARCH-DIAGRAM.svg`. At a minimum, the SoC is expected to include:
+The high-level architecture is shown above in `document/svg/DHS-ARCH-DIAGRAM.svg`. At a minimum, the SoC is expected to include:
 
 - **CPU core**: In-order, single/multi-cycle core with a simple ISA (e.g., RISC-V-like or custom).
 - **Memory system**: On-chip SRAM, boot ROM, and a well-defined memory map.
