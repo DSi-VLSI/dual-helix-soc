@@ -12,7 +12,13 @@ TOP := dummy_tb
 
 XVLOG ?= xvlog
 XELAB ?= xelab
-XSIM ?= xsim
+XSIM  ?= xsim
+
+RISCV64_GCC     ?= riscv64-unknown-elf-gcc
+RISCV64_OBJCOPY ?= riscv64-unknown-elf-objcopy
+RISCV64_NM      ?= riscv64-unknown-elf-nm
+RISCV64_OBJDUMP ?= riscv64-unknown-elf-objdump
+
 
 ####################################################################################################
 # Directories
@@ -22,6 +28,8 @@ export DUAL_HELIX_SOC_DIR := $(CURDIR)
 export COMMON_CELLS_DIR   := $(DUAL_HELIX_SOC_DIR)/submodule/common_cells
 export CV32E40P_DIR       := $(DUAL_HELIX_SOC_DIR)/submodule/cv32e40p
 export CVFPU_DIR          := $(DUAL_HELIX_SOC_DIR)/submodule/cvfpu
+export SOC_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/SoC
+export COMMON_DIR         := $(DUAL_HELIX_SOC_DIR)/submodule/common
 
 BUILD_DIR                 := $(DUAL_HELIX_SOC_DIR)/build
 LOG_DIR                   := $(DUAL_HELIX_SOC_DIR)/log
