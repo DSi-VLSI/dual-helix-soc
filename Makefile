@@ -25,11 +25,12 @@ RISCV64_OBJDUMP ?= riscv64-unknown-elf-objdump
 ####################################################################################################
 
 export DUAL_HELIX_SOC_DIR := $(CURDIR)
+export AXI_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/axi
 export COMMON_CELLS_DIR   := $(DUAL_HELIX_SOC_DIR)/submodule/common_cells
+export COMMON_DIR         := $(DUAL_HELIX_SOC_DIR)/submodule/common
 export CV32E40P_DIR       := $(DUAL_HELIX_SOC_DIR)/submodule/cv32e40p
 export CVFPU_DIR          := $(DUAL_HELIX_SOC_DIR)/submodule/cvfpu
 export SOC_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/SoC
-export COMMON_DIR         := $(DUAL_HELIX_SOC_DIR)/submodule/common
 
 BUILD_DIR                 := $(DUAL_HELIX_SOC_DIR)/build
 LOG_DIR                   := $(DUAL_HELIX_SOC_DIR)/log
@@ -52,23 +53,10 @@ ${LOG_DIR}:
 	@mkdir -p ${LOG_DIR}
 	@echo "*" > ${LOG_DIR}/.gitignore
 
-.PHONY: flist
-flist:
-	@echo "-i \$${DUAL_HELIX_SOC_DIR}/include" > ${FILE_LIST_DIR}/interface.f
-	@find interface -type f -name "*.*v*" | sed "s/^/$$\{DUAL_HELIX_SOC_DIR\}\//g" >> ${FILE_LIST_DIR}/interface.f
-	@echo "-i \$${DUAL_HELIX_SOC_DIR}/include" > ${FILE_LIST_DIR}/dhs.f
-	@find source -type f -name "*.*v*" | sed "s/^/$$\{DUAL_HELIX_SOC_DIR\}\//g" >> ${FILE_LIST_DIR}/dhs.f
-	@echo "-i \$${DUAL_HELIX_SOC_DIR}/include" > ${FILE_LIST_DIR}/testbench.f
-	@find testbench -type f -name "*.*v*" | sed "s/^/$$\{DUAL_HELIX_SOC_DIR\}\//g" >> ${FILE_LIST_DIR}/testbench.f
-	@git add ${FILE_LIST_DIR}/interface.f &> /dev/null
-	@git add ${FILE_LIST_DIR}/dhs.f &> /dev/null
-	@git add ${FILE_LIST_DIR}/testbench.f &> /dev/null
-
 .PHONY: all
 all:
 	@make -s ${BUILD_DIR}
 	@make -s ${LOG_DIR}
-	@make -s flist
 	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/cv32e40p.f -log ${LOG_DIR}/xvlog_cv32e40p.log
 	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/interface.f -log ${LOG_DIR}/xvlog_interface.log
 	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/dhs.f -log ${LOG_DIR}/xvlog_dhs.log

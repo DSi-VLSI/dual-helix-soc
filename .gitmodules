@@ -13,3 +13,6 @@
 [submodule "submodule/SoC"]
 	path = submodule/SoC
 	url = https://github.com/squared-studio/SoC.git
+[submodule "submodule/axi"]
+	path = submodule/axi
+	url = https://github.com/pulp-platform/axi.git
