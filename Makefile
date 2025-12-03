@@ -5,6 +5,7 @@
 ####################################################################################################
 
 TOP := dummy_tb
+HART_ID := 0
 
 ####################################################################################################
 # Tools
@@ -64,3 +65,13 @@ all:
 	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log
 	@cd ${BUILD_DIR} && ${XSIM} ${TOP} -runall -log ${LOG_DIR}/xsim_${TOP}.log
 
+.PHONY: test
+test:
+	@make -s ${BUILD_DIR}
+	@$(eval TEST_PATH := $(shell find ${DUAL_HELIX_SOC_DIR}/software/source -type f -name "*${TEST}*"))
+	@if [ -z "${TEST_PATH}" ]; then echo -e "\033[1;31mTest file ${TEST} not found!\033[0m"; exit 1; fi
+	@if [ $$(echo "${TEST_PATH}" | wc -w) -gt 1 ]; then echo -e "\033[1;31mMultiple test files found for ${TEST}:\n${TEST_PATH}\033[0m"; exit 1; fi
+	@${RISCV64_GCC} -march=rv32imf -mabi=ilp32f -nostdlib -nostartfiles -T ${DUAL_HELIX_SOC_DIR}/software/linkers/core_${HART_ID}.ld -o ${BUILD_DIR}/prog_${HART_ID}.elf ${TEST_PATH} ${DUAL_HELIX_SOC_DIR}/software/include/startup.S -I ${DUAL_HELIX_SOC_DIR}/software/include
+	@${RISCV64_OBJCOPY} -O verilog ${BUILD_DIR}/prog_${HART_ID}.elf ${BUILD_DIR}/prog_${HART_ID}.hex
+	@${RISCV64_NM} -n ${BUILD_DIR}/prog_${HART_ID}.elf > ${BUILD_DIR}/prog_${HART_ID}.sym
+	@${RISCV64_OBJDUMP} -d ${BUILD_DIR}/prog_${HART_ID}.elf > ${BUILD_DIR}/prog_${HART_ID}.dis
