@@ -198,10 +198,9 @@ module obi_2_axi_core_tb;
     current_req_info.wdata = wdata_i;
     current_req_info.be = be_i;
 
-    @(posedge clk_i);
     axi_resp_i.ar_ready <= '1;
-
     do @(posedge clk_i); while (axi_req_o.ar_valid);
+    axi_resp_i.ar_ready <= '0;
 
     if (axi_req_o.ar.addr !== current_req_info.addr) begin
       `ERROR_MSG("AXI Read request address did not match that of OBI request")
@@ -211,8 +210,6 @@ module obi_2_axi_core_tb;
       `ERROR_MSG("AXI Read request unsupported length")
       req_ar_len_unsupported = '1;
     end else `HIGHLIGHT_MSG("AXI Read request supported length")
-
-    axi_resp_i.ar_ready <= '0;
 
     axi_resp_i.r_valid  <= '1;
     axi_resp_i.r.data   <= local_data_reg;
