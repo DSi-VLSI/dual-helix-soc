@@ -1,10 +1,16 @@
 .SHELL: /bin/bash
 
+# Makefile for Dual Helix SoC
+# This Makefile provides targets for building, simulating, and testing the Dual Helix SoC.
+# It uses Xilinx Vivado tools for compilation and simulation.
+
 ####################################################################################################
 # Variables
 ####################################################################################################
 
 TOP := dummy_tb
+TEST := default
+DEBUG := 0
 GUI := 0
 HART_ID := 0
 
@@ -41,42 +47,83 @@ export SOC_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/SoC
 
 BUILD_DIR                 := $(DUAL_HELIX_SOC_DIR)/build
 LOG_DIR                   := $(DUAL_HELIX_SOC_DIR)/log
-FILE_LIST_DIR             := $(DUAL_HELIX_SOC_DIR)/hardware/filelist
+FILE_LISTS                := $(shell find $(DUAL_HELIX_SOC_DIR)/hardware/filelist -type f -name "*.f")
 
 ####################################################################################################
 # Rules
 ####################################################################################################
 
+# Clean build and log directories
 .PHONY: clean
 clean:
 	@rm -rf ${BUILD_DIR}
+
+# Clean both build and log directories
+.PHONY: clean_full
+clean_full:
+	@make -s clean
 	@rm -rf ${LOG_DIR}
 
+# Create build directory and gitignore
 ${BUILD_DIR}:
 	@mkdir -p ${BUILD_DIR}
 	@echo "*" > ${BUILD_DIR}/.gitignore
 
+# Create log directory and gitignore
 ${LOG_DIR}:
 	@mkdir -p ${LOG_DIR}
 	@echo "*" > ${LOG_DIR}/.gitignore
 
-.PHONY: simulate
-simulate:
-	@cd ${BUILD_DIR} && ${XSIM} ${TOP} ${SIM_MODE} -log ${LOG_DIR}/xsim_${TOP}.log
+# Macro to compile a file list using XVLOG
+define COMPILE_FLIST
+	echo -e "\033[1;34mCompiling file list: $1\033[0m"
+	cd ${BUILD_DIR} && ${XVLOG} -sv -f $1 -log ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log
+endef
 
-.PHONY: all
-all:
+# Check if the build is up to date by comparing SHA sums of hardware files
+.PHONY: match_sha
+match_sha:
+	@sha256sum $$(find hardware -type f) > ${BUILD_DIR}/build_$(TOP)_new
+	@diff ${BUILD_DIR}/build_$(TOP)_new ${BUILD_DIR}/build_$(TOP) || make -s ENV_BUILD TOP=$(TOP)
+
+# Perform a full environment build: clean, update submodules, compile file lists, elaborate design
+.PHONY: ENV_BUILD
+ENV_BUILD:
+	@make -s clean
 	@make -s ${BUILD_DIR}
 	@make -s ${LOG_DIR}
-	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/interface.f -log ${LOG_DIR}/xvlog_interface.log
-	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/axi.f -log ${LOG_DIR}/xvlog_axi.log
-	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/cv32e40p.f -log ${LOG_DIR}/xvlog_cv32e40p.log
-	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/dhs.f -log ${LOG_DIR}/xvlog_dhs.log
-	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/ss.f -log ${LOG_DIR}/xvlog_ss.log
-	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/testbench.f -log ${LOG_DIR}/xvlog_testbench.log
+	@git submodule update --init --depth 1
+	@$(foreach flist,${FILE_LISTS},$(call COMPILE_FLIST,$(flist));)
+	@echo -e "\033[1;33mElaborating ${TOP}\033[0m"
 	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps
-	@make -s simulate TOP=${TOP}
+	@sha256sum $$(find hardware -type f) > ${BUILD_DIR}/build_$(TOP)
 
+# Target to ensure the build is up to date
+.PHONY: ${BUILD_DIR}/build_$(TOP)
+${BUILD_DIR}/build_$(TOP):
+	@if [ ! -f ${BUILD_DIR}/build_$(TOP) ]; then \
+		make -s ENV_BUILD TOP=$(TOP); \
+	else \
+		make -s match_sha TOP=$(TOP); \
+	fi
+
+# Generate common simulation arguments
+.PHONY: common_sim_checks
+common_sim_checks:
+	@echo "--testplusarg TEST=$(TEST)" > ${BUILD_DIR}/xsim_args
+	@echo "--testplusarg DEBUG=$(DEBUG)" >> ${BUILD_DIR}/xsim_args
+
+# Run the simulation using XSIM
+.PHONY: simulate
+simulate:
+	@make -s ${BUILD_DIR}/build_$(TOP)
+	@make -s ${LOG_DIR}
+	@make -s common_sim_checks
+	@echo -e "\033[7;33m Simulating ${TOP} \033[0m"
+	@cd ${BUILD_DIR} && ${XSIM} ${TOP} ${SIM_MODE} -f xsim_args -log ${LOG_DIR}/xsim_${TOP}.log
+	@make -s print_logo
+
+# Compile and prepare test program using RISC-V GCC tools
 .PHONY: test
 test:
 	@make -s ${BUILD_DIR}
@@ -87,3 +134,12 @@ test:
 	@${RISCV64_OBJCOPY} -O verilog ${BUILD_DIR}/prog_${HART_ID}.elf ${BUILD_DIR}/prog_${HART_ID}.hex
 	@${RISCV64_NM} -n ${BUILD_DIR}/prog_${HART_ID}.elf > ${BUILD_DIR}/prog_${HART_ID}.sym
 	@${RISCV64_OBJDUMP} -d ${BUILD_DIR}/prog_${HART_ID}.elf > ${BUILD_DIR}/prog_${HART_ID}.dis
+
+# Print ASCII logo
+.PHONY: print_logo
+print_logo:
+	@echo -e "\033[1;34m    ___  __  _____   __     __ ________   _____  __  ________  _____ \033[0m"
+	@echo -e "\033[1;34m   / _ \/ / / / _ | / /    / // / __/ /  /  _/ |/_/ / __/ __ \/ ___/ \033[0m"
+	@echo -e "\033[1;38m  / // / /_/ / __ |/ /__  / _  / _// /___/ /_>  <  _\ \/ /_/ / /__   \033[0m"
+	@echo -e "\033[1;34m /____/\____/_/ |_/____/ /_//_/___/____/___/_/|_| /___/\____/\___/   \033[0m"
+	@echo -e "\033[1;34m                                                                     \033[0m"
