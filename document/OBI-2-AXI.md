@@ -1,12 +1,12 @@
 ## OBI → AXI Bridge
 
-![OBI-2-AXI Block Diagram](OBI-2-AXI-UPDATED-BLOCK.svg)
-![OBI-2-AXI FSM Diagram](OBI-2-AXI-FSM.svg)
+![OBI-2-AXI Block Diagram](svg/OBI-2-AXI-UPDATED-BLOCK.svg)
+![OBI-2-AXI FSM Diagram](svg/OBI-2-AXI-FSM.svg)
 
 This section documents the two diagrams above:
 
-- `OBI-2-AXI-UPDATED-BLOCK.svg` — Block-level view of the OBI-to-AXI bridge.
-- `OBI-2-AXI-FSM.svg` — Finite State Machine (FSM) used by the bridge to translate transactions.
+- `svg/OBI-2-AXI-UPDATED-BLOCK.svg` — Block-level view of the OBI-to-AXI bridge.
+- `svg/OBI-2-AXI-FSM.svg` — Finite State Machine (FSM) used by the bridge to translate transactions.
 
 Use this as a quick reference when reading or modifying the bridge RTL in `source/obi_2_axi/`.
 
@@ -49,4 +49,4 @@ Transition triggers to look for in the diagram/RTL:
 **Where to look in the repo**
 
 - RTL source for this bridge: `source/obi_2_axi/obi_2_axi.sv` (or similarly named file in the `source/obi_2_axi/` directory).
-- Diagrams (SVGs): `OBI-2-AXI-UPDATED-BLOCK.svg` and `OBI-2-AXI-FSM.svg`.
+- Diagrams (SVGs): `svg/OBI-2-AXI-UPDATED-BLOCK.svg` and `svg/OBI-2-AXI-FSM.svg`.
