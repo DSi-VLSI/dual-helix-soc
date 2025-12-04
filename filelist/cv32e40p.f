@@ -3,7 +3,7 @@
 ${CV32E40P_DIR}/rtl/include/cv32e40p_pkg.sv
 ${CV32E40P_DIR}/rtl/include/cv32e40p_fpu_pkg.sv
 ${CV32E40P_DIR}/rtl/include/cv32e40p_apu_core_pkg.sv
-${CV32E40P_DIR}/rtl/vendor/pulp_platform_common_cells/src/cf_math_pkg.sv
+${COMMON_CELLS_DIR}/src/cf_math_pkg.sv
 ${CVFPU_DIR}/src/fpnew_pkg.sv
 
 ${CV32E40P_DIR}/bhv/cv32e40p_sim_clock_gate.sv
@@ -31,11 +31,11 @@ ${CV32E40P_DIR}/rtl/cv32e40p_load_store_unit.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_cs_registers.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_core.sv
 ${CVFPU_DIR}/src/fpnew_classifier.sv
-${CV32E40P_DIR}/rtl/vendor/pulp_platform_common_cells/src/lzc.sv
+${COMMON_CELLS_DIR}/src/lzc.sv
 ${CVFPU_DIR}/src/fpnew_rounding.sv
 ${CVFPU_DIR}/src/fpnew_fma_multi.sv
 ${CVFPU_DIR}/src/fpnew_opgroup_multifmt_slice.sv
-${CV32E40P_DIR}/rtl/vendor/pulp_platform_common_cells/src/rr_arb_tree.sv
+${COMMON_CELLS_DIR}/src/rr_arb_tree.sv
 ${CVFPU_DIR}/src/fpnew_opgroup_block.sv
 ${CVFPU_DIR}/vendor/opene906/E906_RTL_FACTORY/gen_rtl/fdsu/rtl/pa_fdsu_special.v
 ${CVFPU_DIR}/vendor/opene906/E906_RTL_FACTORY/gen_rtl/fdsu/rtl/pa_fdsu_ff1.v
