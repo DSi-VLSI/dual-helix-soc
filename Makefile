@@ -41,7 +41,7 @@ export SOC_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/SoC
 
 BUILD_DIR                 := $(DUAL_HELIX_SOC_DIR)/build
 LOG_DIR                   := $(DUAL_HELIX_SOC_DIR)/log
-FILE_LIST_DIR             := $(DUAL_HELIX_SOC_DIR)/filelist
+FILE_LIST_DIR             := $(DUAL_HELIX_SOC_DIR)/hardware/filelist
 
 ####################################################################################################
 # Rules
