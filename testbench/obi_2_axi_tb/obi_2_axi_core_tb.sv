@@ -114,6 +114,7 @@ module obi_2_axi_core_tb;
 
   task automatic send_request(logic [OBI_ADDRW-1:0] addr, logic we, logic [OBI_DATAW-1:0] wdata,
                               logic [OBI_STRBW-1:0] be);
+    @(posedge clk_i);
     req_i <= '1;
     addr_i <= addr;
     we_i <= we;
@@ -142,26 +143,26 @@ module obi_2_axi_core_tb;
         assert_arready();
         do @(posedge clk_i); while (~axi_req_o.ar_valid);
         deassert_arready();
-      end
-      begin
+
         send_rchannel(current_local_reg_value);
         do @(posedge clk_i); while (~axi_req_o.r_ready);
         deassert_rvalid();
       end
 
       if (current_req.we) begin
-        assert_awready();
-        do @(posedge clk_i); while (~axi_req_o.aw_valid);
-        deassert_awready();
-      end
+        fork
+          begin
+            assert_awready();
+            do @(posedge clk_i); while (~axi_req_o.aw_valid);
+            deassert_awready();
+          end
 
-      if (current_req.we) begin
-        assert_wready();
-        do @(posedge clk_i); while (~axi_req_o.w_valid);
-        recv_wchannel(local_data_reg);
-      end
-
-      if (current_req.we) begin
+          begin
+            assert_wready();
+            do @(posedge clk_i); while (~axi_req_o.w_valid);
+            recv_wchannel(local_data_reg);
+          end
+        join
         assert_bvalid();
         do @(posedge clk_i); while (~axi_req_o.b_ready);
         deassert_bvalid();

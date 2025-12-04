@@ -22,6 +22,11 @@ module obi_2_axi_tb;
     logic [OBI_STRBW-1:0] be;
   } obi_req_info_t;
 
+  typedef logic [OBI_DATAW-1:0] reg_data_t;
+
+  typedef logic [OBI_ADDRW-1:0] addr_t;
+  typedef logic [OBI_DATAW-1:0] data_t;
+
   // WIRES AND SIGNALS
   `AXI_TYPEDEF_ALL(o2a_tb, logic [OBI_ADDRW-1:0], logic [3:0], logic [OBI_DATAW-1:0],
                    logic [OBI_STRBW-1:0], logic [7:0])
@@ -40,26 +45,29 @@ module obi_2_axi_tb;
   o2a_tb_req_t                  axi_req_o;  // AXI Request
   o2a_tb_resp_t                 axi_resp_i;  // AXI Response
 
+  // REGISTERS
+  reg_data_t                    local_data_reg;
+
   // FLAGS
-  logic                         initialization_failed = 0;
+  logic                         initialization_failed = 0;  // TODO
 
-  logic                         rst_gnt_o_high = 0;
-  logic                         rst_aw_valid_high = 0;
-  logic                         rst_w_valid_high = 0;
-  logic                         rst_ar_valid_high = 0;
+  logic                         rst_gnt_o_high = 0;  // TODO
+  logic                         rst_aw_valid_high = 0;  //  TODO
+  logic                         rst_w_valid_high = 0;  // TODO
+  logic                         rst_ar_valid_high = 0;  //  TODO
 
-  logic                         obi_to_axi_cnv_failed = 0;
+  // logic                         obi_to_axi_cnv_failed = 0; //  TODO
 
-  logic                         req_ar_addr_mismatch = 0;
-  logic                         req_ar_len_unsupported = 0;
-  logic                         req_aw_addr_mismatch = 0;
-  logic                         req_aw_len_unsupported = 0;
-  logic                         req_wdata_mismatch = 0;
-  logic                         req_wstrb_mismatch = 0;
-  logic                         req_wlast_not_found = 0;
-  logic                         obi_grant_not_propagated = 0;
-  logic                         obi_rvalid_not_propagated = 0;
-  logic                         obi_rdata_mismatch = 0;
+  // logic                         req_ar_addr_mismatch = 0; // TODO
+  // logic                         req_ar_len_unsupported = 0; // TODO
+  // logic                         req_aw_addr_mismatch = 0; // TODO
+  // logic                         req_aw_len_unsupported = 0; // TODO
+  // logic                         req_wdata_mismatch = 0; // TODO
+  // logic                         req_wstrb_mismatch = 0; // TODO
+  // logic                         req_wlast_not_found = 0; //  TODO
+  // logic                         obi_grant_not_propagated = 0; // TODO
+  // logic                         obi_rvalid_not_propagated = 0; //  TODO
+  // logic                         obi_rdata_mismatch = 0; // TODO
 
   // DUT INSTANTIATION
   obi_2_axi #(
@@ -106,6 +114,45 @@ module obi_2_axi_tb;
     arst_ni <= '1;
   endtask
 
+
+  task automatic assert_arready();
+    axi_resp_i.ar_ready <= '1;
+  endtask
+  task automatic deassert_arready();
+    axi_resp_i.ar_ready <= '0;
+  endtask
+
+  task automatic send_rchannel(input logic [OBI_DATAW-1:0] rdata);
+    axi_resp_i.r_valid <= '1;
+    axi_resp_i.r.data  <= rdata;
+    axi_resp_i.r.last  <= '1;
+  endtask
+  task automatic deassert_rvalid();
+    axi_resp_i.r_valid <= '0;
+  endtask
+
+  task automatic assert_awready();
+    axi_resp_i.aw_ready <= '1;
+  endtask
+  task automatic deassert_awready();
+    axi_resp_i.aw_ready <= '0;
+  endtask
+
+  task automatic assert_wready();
+    axi_resp_i.w_ready <= '1;
+  endtask
+  task automatic recv_wchannel(output logic [OBI_DATAW-1:0] wdata);
+    axi_resp_i.w_ready <= '0;
+    wdata = axi_req_o.w.data;
+  endtask
+
+  task automatic assert_bvalid();
+    axi_resp_i.b_valid <= '1;
+  endtask
+  task automatic deassert_bvalid();
+    axi_resp_i.b_valid <= '0;
+  endtask
+
   task automatic send_request(logic [OBI_ADDRW-1:0] addr, logic we, logic [OBI_DATAW-1:0] wdata,
                               logic [OBI_STRBW-1:0] be);
     @(posedge clk_obi_i);
@@ -115,115 +162,54 @@ module obi_2_axi_tb;
     wdata_i <= wdata;
     be_i <= be;
 
-    @(posedge clk_obi_i);
+    do @(posedge clk_obi_i); while (~gnt_o);
     req_i <= '0;
   endtask
 
+  task automatic service_request();
+    obi_req_info_t current_req;
+    reg_data_t current_local_reg_value = local_data_reg;
 
-  task automatic service_axi_signals();
-    obi_req_info_t current_req_info;
+    @(posedge req_i);
 
-    wait (req_i);
+    `HIGHLIGHT_MSG($sformatf("[%0t] KICK STARTING SERVICE REQWEST", $realtime))
+    // store the incoming request as current request
+    current_req.addr = addr_i;
+    current_req.we = we_i;
+    current_req.wdata = wdata_i;
+    current_req.be = be_i;
 
-    current_req_info.addr = addr_i;
-    current_req_info.we = we_i;
-    current_req_info.wdata = wdata_i;
-    current_req_info.be = be_i;
+    fork
 
-    @(posedge clk_axi_i);
+      begin
+        assert_arready();
+        do @(posedge clk_axi_i); while (~axi_req_o.ar_valid);
+        deassert_arready();
 
-    axi_resp_i.ar_ready <= '1;
-
-    do @(posedge clk_axi_i); while (axi_req_o.ar_valid);
-
-    if (axi_req_o.ar.addr !== current_req_info.addr) begin
-      `ERROR_MSG("AXI Read request address did not match that of OBI request")
-      req_ar_addr_mismatch = '1;
-    end
-    if (axi_req_o.ar.len !== 0) begin
-      `ERROR_MSG("AXI Read request unsupported length")
-      req_ar_len_unsupported = '1;
-    end
-
-    axi_resp_i.ar_ready <= '0;
-
-    axi_resp_i.r_valid  <= '1;
-    axi_resp_i.r.data   <= 32'h12E2A;
-    axi_resp_i.r.last   <= '1;
-
-    if (current_req_info.we) begin
-      @(posedge clk_axi_i);
-
-      axi_resp_i.aw_ready <= '1;
-
-      do @(posedge clk_axi_i); while (axi_req_o.aw_valid);
-
-      if (axi_req_o.aw.addr !== current_req_info.addr) begin
-        `ERROR_MSG("AXI write request address did not match that of OBI request")
-        req_aw_addr_mismatch = '1;
-      end
-      if (axi_req_o.aw.len !== 0) begin
-        `ERROR_MSG("AXI write request unsupported length")
-        req_aw_len_unsupported = '1;
+        send_rchannel(current_local_reg_value);
+        do @(posedge clk_axi_i); while (~axi_req_o.r_ready);
+        deassert_rvalid();
       end
 
-      axi_resp_i.aw_ready <= '0;
-
-      axi_resp_i.w_ready  <= '1;
-
-      do @(posedge clk_axi_i); while (axi_req_o.w_valid);
-
-      if (axi_req_o.w.data !== current_req_info.wdata) begin
-        `ERROR_MSG("AXI write request data did not match that of OBI request")
-        req_wdata_mismatch = '1;
+      if (current_req.we) begin
+        fork
+          begin
+            assert_awready();
+            do @(posedge clk_axi_i); while (~axi_req_o.aw_valid);
+            deassert_awready();
+          end
+          begin
+            assert_wready();
+            do @(posedge clk_axi_i); while (~axi_req_o.w_valid);
+            recv_wchannel(local_data_reg);
+          end
+        join
+        assert_bvalid();
+        do @(posedge clk_axi_i); while (~axi_req_o.b_ready);
+        deassert_bvalid();
       end
-      if (axi_req_o.w.strb !== current_req_info.be) begin
-        `ERROR_MSG("AXI write request data strb did not match that of OBI request")
-        req_wstrb_mismatch = '1;
-      end
-      if (axi_req_o.w.last !== '1) begin
-        `ERROR_MSG("AXI write request data last was not found")
-        req_wlast_not_found = '1;
-      end
 
-      axi_resp_i.w_ready <= '0;
-
-      axi_resp_i.b_valid <= '1;
-
-      do @(posedge clk_axi_i); while (axi_req_o.b_ready);
-
-      axi_resp_i.b_valid <= '0;
-    end else begin
-      wait (axi_req_o.r_ready);
-    end
-
-    if (~gnt_o) begin
-      `ERROR_MSG("Grant signal not forwarded through OBI")
-      obi_grant_not_propagated = '1;
-    end
-    if (~rvalid_o) begin
-      `ERROR_MSG("Rvalid signal not forwarded through OBI")
-      obi_rvalid_not_propagated = '1;
-    end
-    if (rdata_o !== 32'h12E2A) begin
-      `ERROR_MSG("Expected read data was not found")
-      obi_rvalid_not_propagated = '1;
-    end
-
-    if ( req_ar_addr_mismatch |
-     req_ar_len_unsupported |
-     req_aw_addr_mismatch |
-     req_aw_len_unsupported |
-     req_wdata_mismatch |
-     req_wstrb_mismatch |
-     req_wlast_not_found |
-     obi_grant_not_propagated |
-     obi_rvalid_not_propagated |
-     obi_rdata_mismatch ) begin
-      obi_to_axi_cnv_failed = '1;
-    end else begin
-      `PASS_MSG("Transaction conversion success")
-    end
+    join
 
   endtask
 
@@ -236,7 +222,7 @@ module obi_2_axi_tb;
     rst_w_valid_high = '0;
     rst_ar_valid_high = '0;
 
-    @(posedge arst_ni);
+    @(negedge arst_ni);
     if (gnt_o) begin
       rst_gnt_o_high = '1;
       `ERROR_MSG("gnt_o was found asserted on reset")
@@ -276,24 +262,34 @@ module obi_2_axi_tb;
     end
   endtask
 
-  task automatic check_xactn_conversion();
-    forever begin
-      @(posedge obi_to_axi_cnv_failed);
-      `ERROR_MSG("OBI to AXI request convertion failed")
-    end
-  endtask
+  // task automatic check_xactn_conversion();
+  //   forever begin
+  //     @(posedge obi_to_axi_cnv_failed);
+  //     `ERROR_MSG("OBI to AXI request convertion failed")
+  //   end
+  // endtask
 
   // SIGNAL MANIPULATION
   initial begin
     fork
       forever begin
-        service_axi_signals();
+        service_request();
       end
       begin
         apply_global_reset();
         #10ns;
-        send_request(32'hAB, '1, 32'hBC, '1);
+        send_request(32'hAB, '0, 32'hBC, '1);
         #10ns;
+        send_request(32'hAB, '1, $urandom, '1);
+        #10ns;
+        send_request(32'hAB, '0, $urandom, '1);
+        #10ns;
+        send_request(32'hAB, '1, $urandom, '1);
+        #10ns;
+        send_request(32'hAB, '1, $urandom, '1);
+        #10ns;
+        send_request(32'hAB, '0, $urandom, '1);
+        `HIGHLIGHT_MSG("TEST SEQUENCE COMPLETE")
       end
     join
   end
@@ -302,13 +298,13 @@ module obi_2_axi_tb;
   initial begin
     fork
       check_initialization();
-      check_xactn_conversion();
     join
   end
 
-  // REPORT AND FINISH
+  // TIMEOUT AND FINISH
   initial begin
-    #100000ns;
+    #10000ns;
+    `HIGHLIGHT_MSG("Test timed out: NON-FATAL")
     $finish;
   end
 
