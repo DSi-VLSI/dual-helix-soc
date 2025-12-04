@@ -11,12 +11,12 @@ module obi_2_axi_core #(
     input logic clk_i,   // Core speed
     input logic arst_ni, // Async Global Reset
 
-    input  logic [OBI_ADDRW-1:0] addr_i,    // OBI request address
-    input  logic                 we_i,      // OBI write enable
-    input  logic [OBI_DATAW-1:0] wdata_i,   // OBI write data
-    input  logic [OBI_STRBW-1:0] be_i,      // OBI byte enable
-    input  logic                 req_i,     // OBI Request
-    output logic                 gnt_o,     // OBI Grant
+    input  logic [OBI_ADDRW-1:0] addr_i,   // OBI request address
+    input  logic                 we_i,     // OBI write enable
+    input  logic [OBI_DATAW-1:0] wdata_i,  // OBI write data
+    input  logic [OBI_STRBW-1:0] be_i,     // OBI byte enable
+    input  logic                 req_i,    // OBI Request
+    output logic                 gnt_o,    // OBI Grant
 
     output logic                 rvalid_o,  // OBI rvalid
     output logic [OBI_DATAW-1:0] rdata_o,   // OBI read data
@@ -39,7 +39,7 @@ module obi_2_axi_core #(
 
   always_comb begin
     axi_fsm_next_state = axi_fsm_state;
-    
+
     axi_req_o = '0;
     axi_req_o.aw.addr = addr_i;
     axi_req_o.aw.size = 2;
@@ -88,7 +88,7 @@ module obi_2_axi_core #(
       end
       SEND_W: begin
         axi_req_o.w_valid = '1;
-        axi_req_o.w.last = '1;
+        axi_req_o.w.last  = '1;
         if (axi_resp_i.w_ready) axi_fsm_next_state = RECV_B;
       end
       RECV_B: begin
