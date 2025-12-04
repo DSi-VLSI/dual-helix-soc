@@ -38,6 +38,8 @@ module obi_2_axi_core #(
   axi_fsm_state_e axi_fsm_state, axi_fsm_next_state;
 
   always_comb begin
+    axi_fsm_next_state = axi_fsm_state;
+    
     axi_req_o = '0;
     axi_req_o.aw.addr = addr_i;
     axi_req_o.aw.size = 2;
@@ -86,7 +88,8 @@ module obi_2_axi_core #(
       end
       SEND_W: begin
         axi_req_o.w_valid = '1;
-        if (axi_resp_i.w_ready && axi_resp_i.w.last) axi_fsm_next_state = RECV_B;
+        axi_req_o.w.last = '1;
+        if (axi_resp_i.w_ready) axi_fsm_next_state = RECV_B;
       end
       RECV_B: begin
         axi_req_o.b_ready = '1;

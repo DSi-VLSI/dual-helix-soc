@@ -5,7 +5,14 @@
 ####################################################################################################
 
 TOP := dummy_tb
+GUI := 0
 HART_ID := 0
+
+ifeq ($(GUI), 0) 
+	SIM_MODE := -runall
+else
+	SIM_MODE := -gui
+endif
 
 ####################################################################################################
 # Tools
@@ -19,7 +26,6 @@ RISCV64_GCC     ?= riscv64-unknown-elf-gcc
 RISCV64_OBJCOPY ?= riscv64-unknown-elf-objcopy
 RISCV64_NM      ?= riscv64-unknown-elf-nm
 RISCV64_OBJDUMP ?= riscv64-unknown-elf-objdump
-
 
 ####################################################################################################
 # Directories
@@ -54,16 +60,22 @@ ${LOG_DIR}:
 	@mkdir -p ${LOG_DIR}
 	@echo "*" > ${LOG_DIR}/.gitignore
 
+.PHONY: simulate
+simulate:
+	@cd ${BUILD_DIR} && ${XSIM} ${TOP} ${SIM_MODE} -log ${LOG_DIR}/xsim_${TOP}.log
+
 .PHONY: all
 all:
 	@make -s ${BUILD_DIR}
 	@make -s ${LOG_DIR}
-	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/cv32e40p.f -log ${LOG_DIR}/xvlog_cv32e40p.log
 	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/interface.f -log ${LOG_DIR}/xvlog_interface.log
+	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/axi.f -log ${LOG_DIR}/xvlog_axi.log
+	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/cv32e40p.f -log ${LOG_DIR}/xvlog_cv32e40p.log
 	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/dhs.f -log ${LOG_DIR}/xvlog_dhs.log
+	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/ss.f -log ${LOG_DIR}/xvlog_ss.log
 	@cd ${BUILD_DIR} && ${XVLOG} -sv -f ${FILE_LIST_DIR}/testbench.f -log ${LOG_DIR}/xvlog_testbench.log
-	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log
-	@cd ${BUILD_DIR} && ${XSIM} ${TOP} -runall -log ${LOG_DIR}/xsim_${TOP}.log
+	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps
+	@make -s simulate TOP=${TOP}
 
 .PHONY: test
 test:

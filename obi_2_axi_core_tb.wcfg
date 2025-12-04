@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="obi_2_axi_core_tb.wdb" id="1">
+         <top_modules>
+            <top_module name="axi_pkg" />
+            <top_module name="obi_2_axi_core_tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="908,100 ps"></ZoomStartTime>
+      <ZoomEndTime time="915,121 ps"></ZoomEndTime>
+      <Cursor1Time time="910,300 ps"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="196"></NameColumnWidth>
+      <ValueColumnWidth column_width="181"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="17" />
+   <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/clk_i">
+      <obj_property name="ElementShortName">clk_i</obj_property>
+      <obj_property name="ObjectShortName">clk_i</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/arst_ni">
+      <obj_property name="ElementShortName">arst_ni</obj_property>
+      <obj_property name="ObjectShortName">arst_ni</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/addr_i">
+      <obj_property name="ElementShortName">addr_i[31:0]</obj_property>
+      <obj_property name="ObjectShortName">addr_i[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/we_i">
+      <obj_property name="ElementShortName">we_i</obj_property>
+      <obj_property name="ObjectShortName">we_i</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/wdata_i">
+      <obj_property name="ElementShortName">wdata_i[31:0]</obj_property>
+      <obj_property name="ObjectShortName">wdata_i[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/be_i">
+      <obj_property name="ElementShortName">be_i[3:0]</obj_property>
+      <obj_property name="ObjectShortName">be_i[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/req_i">
+      <obj_property name="ElementShortName">req_i</obj_property>
+      <obj_property name="ObjectShortName">req_i</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/gnt_o">
+      <obj_property name="ElementShortName">gnt_o</obj_property>
+      <obj_property name="ObjectShortName">gnt_o</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/rvalid_o">
+      <obj_property name="ElementShortName">rvalid_o</obj_property>
+      <obj_property name="ObjectShortName">rvalid_o</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/rdata_o">
+      <obj_property name="ElementShortName">rdata_o[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rdata_o[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/axi_req_o">
+      <obj_property name="ElementShortName">axi_req_o</obj_property>
+      <obj_property name="ObjectShortName">axi_req_o</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/axi_resp_i">
+      <obj_property name="ElementShortName">axi_resp_i</obj_property>
+      <obj_property name="ObjectShortName">axi_resp_i</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/axi_resp_i.aw_ready">
+         <obj_property name="ElementShortName">.aw_ready</obj_property>
+         <obj_property name="ObjectShortName">.aw_ready</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/axi_resp_i.ar_ready">
+         <obj_property name="ElementShortName">.ar_ready</obj_property>
+         <obj_property name="ObjectShortName">.ar_ready</obj_property>
+         <obj_property name="CustomSignalColor">#FF0000</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/axi_resp_i.w_ready">
+         <obj_property name="ElementShortName">.w_ready</obj_property>
+         <obj_property name="ObjectShortName">.w_ready</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/axi_resp_i.b_valid">
+         <obj_property name="ElementShortName">.b_valid</obj_property>
+         <obj_property name="ObjectShortName">.b_valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/axi_resp_i.b">
+         <obj_property name="ElementShortName">.b</obj_property>
+         <obj_property name="ObjectShortName">.b</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/obi_2_axi_core_tb/u_dut/axi_resp_i.r_valid">
+         <obj_property name="ElementShortName">.r_valid</obj_property>
+         <obj_property name="ObjectShortName">.r_valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/axi_resp_i.r">
+         <obj_property name="ElementShortName">.r</obj_property>
+         <obj_property name="ObjectShortName">.r</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/axi_fsm_state">
+      <obj_property name="ElementShortName">axi_fsm_state[31:0]</obj_property>
+      <obj_property name="ObjectShortName">axi_fsm_state[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/axi_fsm_next_state">
+      <obj_property name="ElementShortName">axi_fsm_next_state[31:0]</obj_property>
+      <obj_property name="ObjectShortName">axi_fsm_next_state[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/OBI_ADDRW">
+      <obj_property name="ElementShortName">OBI_ADDRW[31:0]</obj_property>
+      <obj_property name="ObjectShortName">OBI_ADDRW[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/OBI_DATAW">
+      <obj_property name="ElementShortName">OBI_DATAW[31:0]</obj_property>
+      <obj_property name="ObjectShortName">OBI_DATAW[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/obi_2_axi_core_tb/u_dut/OBI_STRBW">
+      <obj_property name="ElementShortName">OBI_STRBW[31:0]</obj_property>
+      <obj_property name="ObjectShortName">OBI_STRBW[31:0]</obj_property>
+   </wvobject>
+</wave_config>
