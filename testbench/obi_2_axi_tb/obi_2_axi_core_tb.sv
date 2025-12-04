@@ -74,19 +74,101 @@ module obi_2_axi_core_tb;
     arst_ni <= '1;
   endtask
 
+  task automatic assert_arready();
+    axi_resp_i.ar_ready <= '1;
+  endtask
+  task automatic deassert_arready();
+    axi_resp_i.ar_ready <= '0;
+  endtask
+
+  task automatic send_rchannel(input logic [OBI_DATAW-1:0] rdata);
+    axi_resp_i.r_valid <= '1;
+    axi_resp_i.r.data  <= rdata;
+    axi_resp_i.r.last  <= '1;
+  endtask
+  task automatic deassert_rvalid();
+    axi_resp_i.r_valid <= '0;
+  endtask
+
+  task automatic assert_awready();
+    axi_resp_i.aw_ready <= '1;
+  endtask
+  task automatic deassert_awready();
+    axi_resp_i.aw_ready <= '0;
+  endtask
+
+  task automatic assert_wready();
+    axi_resp_i.w_ready <= '1;
+  endtask
+  task automatic recv_wchannel(output logic [OBI_DATAW-1:0] wdata);
+    axi_resp_i.w_ready <= '0;
+    wdata = axi_req_o.w.data;
+  endtask
+
+  task automatic assert_bvalid();
+    axi_resp_i.b_valid <= '1;
+  endtask
+  task automatic deassert_bvalid();
+    axi_resp_i.b_valid <= '0;
+  endtask
+
   task automatic send_request(logic [OBI_ADDRW-1:0] addr, logic we, logic [OBI_DATAW-1:0] wdata,
                               logic [OBI_STRBW-1:0] be);
-  @(posedge clk_i);
     req_i <= '1;
     addr_i <= addr;
     we_i <= we;
     wdata_i <= wdata;
     be_i <= be;
-    @(posedge clk_i);
+    do @(posedge clk_i); while (~gnt_o);
     req_i <= '0;
   endtask
 
   task automatic service_request();
+    obi_req_info_t current_req;
+    logic [OBI_DATAW-1:0] current_local_reg_value = local_data_reg;
+
+    @(posedge req_i);
+
+    `HIGHLIGHT_MSG($sformatf("[%0t] KICK STARTING SERVICE REQWEST", $realtime))
+    // store the incoming request as current request
+    current_req.addr = addr_i;
+    current_req.we = we_i;
+    current_req.wdata = wdata_i;
+    current_req.be = be_i;
+
+    fork
+
+      begin
+        assert_arready();
+        do @(posedge clk_i); while (~axi_req_o.ar_valid);
+        deassert_arready();
+      end
+      begin
+        send_rchannel(current_local_reg_value);
+        do @(posedge clk_i); while (~axi_req_o.r_ready);
+        deassert_rvalid();
+      end
+
+      if (current_req.we) begin
+        assert_awready();
+        do @(posedge clk_i); while (~axi_req_o.aw_valid);
+        deassert_awready();
+      end
+
+      if (current_req.we) begin
+        assert_wready();
+        do @(posedge clk_i); while (~axi_req_o.w_valid);
+        recv_wchannel(local_data_reg);
+      end
+
+      if (current_req.we) begin
+        assert_bvalid();
+        do @(posedge clk_i); while (~axi_req_o.b_ready);
+        deassert_bvalid();
+      end
+
+    join
+
   endtask
 
   // TEST DRIVE
@@ -101,6 +183,10 @@ module obi_2_axi_core_tb;
     send_request(32'hab, '1, 32'h69, '1);
     #10ns;
     send_request(32'hab, '0, '0, '0);
+    #10ns;
+    send_request(32'hab, '1, 32'h78, '1);
+    #10ns;
+    send_request(32'hab, '1, 32'hFC, '1);
   end
 
   // TEST REACT
