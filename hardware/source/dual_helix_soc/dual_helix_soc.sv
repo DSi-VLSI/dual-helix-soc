@@ -49,6 +49,9 @@ module dual_helix_soc
   dual_helix_pkg::dhs_sl_mp_axi_req_t  [3:0]                sysl_slv_device_axi_req;
   dual_helix_pkg::dhs_sl_mp_axi_resp_t [3:0]                sysl_slv_device_axi_resp;
 
+  dual_helix_pkg::dhs_axil_req_t       [1:0]                sysl_to_periphl_axil_req;
+  dual_helix_pkg::dhs_axil_resp_t      [1:0]                sysl_to_periphl_axil_resp;
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// Core Instances
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -305,13 +308,13 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_cdc #(
-      .aw_chan_t  (dhs_cl_mp_axi_aw_chan_t),
-      .w_chan_t   (dhs_cl_mp_axi_w_chan_t),
-      .b_chan_t   (dhs_cl_mp_axi_b_chan_t),
-      .ar_chan_t  (dhs_cl_mp_axi_ar_chan_t),
-      .r_chan_t   (dhs_cl_mp_axi_r_chan_t),
-      .axi_req_t  (dhs_cl_mp_axi_req_t),
-      .axi_resp_t (dhs_cl_mp_axi_resp_t),
+      .aw_chan_t  (dual_helix_pkg::dhs_cl_mp_axi_aw_chan_t),
+      .w_chan_t   (dual_helix_pkg::dhs_cl_mp_axi_w_chan_t),
+      .b_chan_t   (dual_helix_pkg::dhs_cl_mp_axi_b_chan_t),
+      .ar_chan_t  (dual_helix_pkg::dhs_cl_mp_axi_ar_chan_t),
+      .r_chan_t   (dual_helix_pkg::dhs_cl_mp_axi_r_chan_t),
+      .axi_req_t  (dual_helix_pkg::dhs_cl_mp_axi_req_t),
+      .axi_resp_t (dual_helix_pkg::dhs_cl_mp_axi_resp_t),
       .LogDepth   (1), // TODO
       .SyncStages (2) // TODO
   ) cl2sl_axi_cdc (
@@ -392,20 +395,70 @@ module dual_helix_soc
       .AxiUserWidth   (dual_helix_pkg::DHS_USERW),
       .AxiMaxWriteTxns(1),
       .AxiMaxReadTxns (1),
-      .FullBW         (), // TODO
-      .FallThrough    (), // TODO
-      .full_req_t     (dual_helix_pkg::dhs_sl_sp_axi_req_t),
-      .full_resp_t    (dual_helix_pkg::dhs_sl_sp_axi_resp_t),
+      .FullBW         (),                                      // TODO
+      .FallThrough    (),                                      // TODO
+      .full_req_t     (dual_helix_pkg::dhs_sl_mp_axi_req_t),
+      .full_resp_t    (dual_helix_pkg::dhs_sl_mp_axi_resp_t),
       .lite_req_t     (dual_helix_pkg::dhs_axil_req_t),
       .lite_resp_t    (dual_helix_pkg::dhs_axil_resp_t)
-  ) sl2cl_axi2axil_cvtr (
+  ) sl2pl_axi2axil_cvtr (
       .clk_i(sysl_clk_i),
       .rst_ni(sysl_arst_ni),
       .test_i('0),
       .slv_req_i(sysl_slv_device_axi_req[2]),
       .slv_resp_o(sysl_slv_device_axi_resp[2]),
-      .mst_req_o(),
-      .mst_resp_i()
+      .mst_req_o(sysl_to_periphl_axil_req[0]),
+      .mst_resp_i(sysl_to_periphl_axil_resp[0])
   );
+
+  axi_cdc #(
+      .aw_chan_t  (dhs_axil_aw_chan_t),
+      .w_chan_t   (dhs_axil_w_chan_t),
+      .b_chan_t   (dhs_axil_b_chan_t),
+      .ar_chan_t  (dhs_axil_ar_chan_t),
+      .r_chan_t   (dhs_axil_r_chan_t),
+      .axi_req_t  (dhs_axil_req_t),
+      .axi_resp_t (dhs_axil_resp_t),
+      .LogDepth   (1), // TODO
+      .SyncStages (2) // TODO
+  ) sl2pl_axi_cdc (
+      .src_clk_i (sysl_clk_i),
+      .src_rst_ni(sysl_arst_ni),
+      .src_req_i (sysl_to_periphl_axil_req[0]),
+      .src_resp_o(sysl_to_periphl_axil_resp[0]),
+      .dst_clk_i (periphl_clk_i),
+      .dst_rst_ni(periphl_arst_ni),
+      .dst_req_o (),
+      .dst_resp_i()
+  );
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// AXI-LITE-TO-AXI CDC
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  axi_cdc #(
+      .aw_chan_t  (dhs_axil_aw_chan_t),
+      .w_chan_t   (dhs_axil_w_chan_t),
+      .b_chan_t   (dhs_axil_b_chan_t),
+      .ar_chan_t  (dhs_axil_ar_chan_t),
+      .r_chan_t   (dhs_axil_r_chan_t),
+      .axi_req_t  (dhs_axil_req_t),
+      .axi_resp_t (dhs_axil_resp_t),
+      .LogDepth   (1), // TODO
+      .SyncStages (2) // TODO
+  ) pl2sl_axi_cdc (
+      .src_clk_i (periphl_clk_i),
+      .src_rst_ni(periphl_arst_ni),
+      .src_req_i (),
+      .src_resp_o(),
+      .dst_clk_i (sysl_clk_i),
+      .dst_rst_ni(sysl_arst_ni),
+      .dst_req_o (sysl_to_periphl_axil_req[1]),
+      .dst_resp_i(sysl_to_periphl_axil_resp[1])
+  );
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// APB-TO-AXI-LITE Bridge
+  //////////////////////////////////////////////////////////////////////////////////////////////////
 
 endmodule
