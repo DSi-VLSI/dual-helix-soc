@@ -1,5 +1,5 @@
-`ifndef __O2A_DPD__
-`define __O2A_DPD__
+`ifndef __TB_DPD__
+`define __TB_DPD__
 
 `define ERROR_MSG(_msg) $display("\033[1;31m%s\033[0m", _msg);
 `define HIGHLIGHT_MSG(_msg) $display("\033[1;33m%s\033[0m", _msg);

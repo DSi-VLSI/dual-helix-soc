@@ -1,5 +1,12 @@
 -i ${DUAL_HELIX_SOC_DIR}/hardware/include
+-i ${APB_DIR}/include
+-i ${AXI_DIR}/include
+
+${APB_DIR}/src/apb_pkg.sv
+${AXI_DIR}/src/axi_pkg.sv
+${DUAL_HELIX_SOC_DIR}/hardware/package/dual_helix_pkg.sv
 
 ${DUAL_HELIX_SOC_DIR}/hardware/source/obi_2_axi/obi_2_axi_core.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/obi_2_axi/obi_2_axi.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/apb_2_axil/apb_2_axil.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/dual_helix_soc/dual_helix_soc.sv

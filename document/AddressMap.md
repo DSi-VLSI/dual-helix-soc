@@ -10,4 +10,4 @@
 | DMA         |    0x20005000 |  0x20005FFF |   4 KB | DMA MMIO region. Matches original raw entry.                 |
 | SPI_MEM     |    0x30000000 |  0x3FFFFFFF | 256 MB | SPI flash memory-mapped region                               |
 | RAM         |    0x40000000 |  0xFFFEFFFF |   3 GB | On-chip RAM. Matches original raw entry.                     |
-| BOOT_ROM    |    0xFFFEFFFF |  0xFFFFFFFF |  64 KB | Boot ROM (top of address space). Matches original raw entry. |
+| BOOT_ROM    |    0xFFFF0000 |  0xFFFFFFFF |  64 KB | Boot ROM (top of address space). Matches original raw entry. |
