@@ -1,5 +1,5 @@
 `include "axi/typedef.svh"
-`include "o2a_dpd.svh"
+`include "tb_dpd.svh"
 
 module obi_2_axi_tb;
 

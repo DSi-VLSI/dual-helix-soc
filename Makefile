@@ -38,6 +38,7 @@ RISCV64_OBJDUMP ?= riscv64-unknown-elf-objdump
 ####################################################################################################
 
 export DUAL_HELIX_SOC_DIR := $(CURDIR)
+export APB_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/apb
 export AXI_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/axi
 export COMMON_CELLS_DIR   := $(DUAL_HELIX_SOC_DIR)/submodule/common_cells
 export COMMON_DIR         := $(DUAL_HELIX_SOC_DIR)/submodule/common

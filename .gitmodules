@@ -16,3 +16,6 @@
 [submodule "submodule/axi"]
 	path = submodule/axi
 	url = https://github.com/pulp-platform/axi.git
+[submodule "submodule/apb"]
+	path = submodule/apb
+	url = https://github.com/pulp-platform/apb.git
