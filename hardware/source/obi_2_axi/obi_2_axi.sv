@@ -57,12 +57,10 @@ module obi_2_axi #(
       .elem_in_clk_i(clk_obi_i),
       .elem_in_valid_i(req_i),
       .elem_in_ready_o(gnt_o),
-      .elem_in_count_o(),
       .elem_out_o({intr_addr_i, intr_we_i, intr_wdata_i, intr_be_i}),
       .elem_out_clk_i(clk_axi_i),
       .elem_out_valid_o(intr_req_i),
-      .elem_out_ready_i(intr_gnt_o),
-      .elem_out_count_o()
+      .elem_out_ready_i(intr_gnt_o)
   );
 
   cdc_fifo #(
@@ -74,12 +72,10 @@ module obi_2_axi #(
       .elem_in_clk_i(clk_axi_i),
       .elem_in_valid_i(intr_rvalid_o),
       .elem_in_ready_o(),
-      .elem_in_count_o(),
       .elem_out_o(rdata_o),
       .elem_out_clk_i(clk_obi_i),
       .elem_out_valid_o(rvalid_o),
-      .elem_out_ready_i('1),
-      .elem_out_count_o()
+      .elem_out_ready_i('1)
   );
 
 
