@@ -123,7 +123,7 @@ package dual_helix_pkg;
       '{idx: 5, start_addr: (RAM_BASE), end_addr: (BOOT_ROM_END)}
   };
 
-  localparam xbar_cfg_t PeripheralLinkCOnfig = '{
+  localparam xbar_cfg_t PeripheralLinkConfig = '{
       NoSlvPorts: 2,
       NoMstPorts: 6,
       MaxMstTrans: 1,

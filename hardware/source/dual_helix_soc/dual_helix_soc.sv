@@ -1,8 +1,58 @@
 module dual_helix_soc
-  import dual_helix_pkg::*;
+  import axi_pkg::xbar_rule_32_t;
+  import axi_pkg::xbar_cfg_t;
+
+  import dual_helix_pkg::BOOT_ROM_BASE;
+  import dual_helix_pkg::CoreLinkConfig;
+  import dual_helix_pkg::CoreLinkRule;
+  import dual_helix_pkg::DHS_ADDRW;
+  import dual_helix_pkg::dhs_apb_req_t;
+  import dual_helix_pkg::dhs_apb_resp_t;
+  import dual_helix_pkg::dhs_axil_ar_chan_t;
+  import dual_helix_pkg::dhs_axil_aw_chan_t;
+  import dual_helix_pkg::dhs_axil_b_chan_t;
+  import dual_helix_pkg::dhs_axil_r_chan_t;
+  import dual_helix_pkg::dhs_axil_req_t;
+  import dual_helix_pkg::dhs_axil_resp_t;
+  import dual_helix_pkg::dhs_axil_w_chan_t;
+  import dual_helix_pkg::dhs_cl_mp_axi_ar_chan_t;
+  import dual_helix_pkg::dhs_cl_mp_axi_aw_chan_t;
+  import dual_helix_pkg::dhs_cl_mp_axi_b_chan_t;
+  import dual_helix_pkg::dhs_cl_mp_axi_r_chan_t;
+  import dual_helix_pkg::dhs_cl_mp_axi_req_t;
+  import dual_helix_pkg::dhs_cl_mp_axi_resp_t;
+  import dual_helix_pkg::dhs_cl_mp_axi_w_chan_t;
+  import dual_helix_pkg::dhs_cl_sp_axi_ar_chan_t;
+  import dual_helix_pkg::dhs_cl_sp_axi_aw_chan_t;
+  import dual_helix_pkg::dhs_cl_sp_axi_b_chan_t;
+  import dual_helix_pkg::dhs_cl_sp_axi_r_chan_t;
+  import dual_helix_pkg::dhs_cl_sp_axi_req_t;
+  import dual_helix_pkg::dhs_cl_sp_axi_resp_t;
+  import dual_helix_pkg::dhs_cl_sp_axi_w_chan_t;
+  import dual_helix_pkg::DHS_DATAW;
+  import dual_helix_pkg::dhs_sl_mp_axi_ar_chan_t;
+  import dual_helix_pkg::dhs_sl_mp_axi_aw_chan_t;
+  import dual_helix_pkg::dhs_sl_mp_axi_b_chan_t;
+  import dual_helix_pkg::dhs_sl_mp_axi_r_chan_t;
+  import dual_helix_pkg::dhs_sl_mp_axi_req_t;
+  import dual_helix_pkg::dhs_sl_mp_axi_resp_t;
+  import dual_helix_pkg::dhs_sl_sp_axi_ar_chan_t;
+  import dual_helix_pkg::dhs_sl_sp_axi_aw_chan_t;
+  import dual_helix_pkg::dhs_sl_sp_axi_b_chan_t;
+  import dual_helix_pkg::dhs_sl_sp_axi_r_chan_t;
+  import dual_helix_pkg::dhs_sl_sp_axi_req_t;
+  import dual_helix_pkg::dhs_sl_sp_axi_resp_t;
+  import dual_helix_pkg::dhs_sl_sp_axi_w_chan_t;
+  import dual_helix_pkg::DHS_SL_SP_IDW;
+  import dual_helix_pkg::DHS_STRBW;
+  import dual_helix_pkg::DHS_USERW;
+  import dual_helix_pkg::PeripheralLinkConfig;
+  import dual_helix_pkg::SystemLinkConfig;
+  import dual_helix_pkg::SystemLinkRule;
+  import dual_helix_pkg::UART_BASE;
 #(
-    parameter type apb_req_t  = dual_helix_pkg::dhs_apb_req_t,
-    parameter type apb_resp_t = dual_helix_pkg::dhs_apb_resp_t
+    parameter type apb_req_t  = dhs_apb_req_t,
+    parameter type apb_resp_t = dhs_apb_resp_t
 ) (
     input logic core1_clk_i,
     input logic core2_clk_i,
@@ -21,8 +71,8 @@ module dual_helix_soc
     input  apb_req_t  apb_slv_req_i,
     output apb_resp_t apb_slv_resp_o,
 
-    output dual_helix_pkg::dhs_sl_mp_axi_req_t  ext_ram_axi_req_o,
-    input  dual_helix_pkg::dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
+    output dhs_sl_mp_axi_req_t  ext_ram_axi_req_o,
+    input  dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
 
     input  logic uart_rx_i,
     output logic uart_tx_o
@@ -33,38 +83,38 @@ module dual_helix_soc
   //// Internal Signals
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
-  logic                                [3:0][OBI_ADDRW-1:0] core_obi_addr_i;
-  logic                                [3:0]                core_obi_we_i;
-  logic                                [3:0][OBI_DATAW-1:0] core_obi_wdata_i;
-  logic                                [3:0][OBI_STRBW-1:0] core_obi_be_i;
-  logic                                [3:0]                core_obi_req_i;
-  logic                                [3:0]                core_obi_gnt_o;
-  logic                                [3:0]                core_obi_rvalid_o;
-  logic                                [3:0][OBI_DATAW-1:0] core_obi_rdata_o;
+  logic                [3:0][DHS_ADDRW-1:0] core_obi_addr_i;
+  logic                [3:0]                core_obi_we_i;
+  logic                [3:0][DHS_DATAW-1:0] core_obi_wdata_i;
+  logic                [3:0][DHS_STRBW-1:0] core_obi_be_i;
+  logic                [3:0]                core_obi_req_i;
+  logic                [3:0]                core_obi_gnt_o;
+  logic                [3:0]                core_obi_rvalid_o;
+  logic                [3:0][DHS_DATAW-1:0] core_obi_rdata_o;
 
-  dual_helix_pkg::dhs_cl_sp_axi_req_t  [3:0]                core_obi_axi_req;
-  dual_helix_pkg::dhs_cl_sp_axi_resp_t [3:0]                core_obi_axi_resp;
+  dhs_cl_sp_axi_req_t  [3:0]                core_obi_axi_req;
+  dhs_cl_sp_axi_resp_t [3:0]                core_obi_axi_resp;
 
-  dual_helix_pkg::dhs_cl_mp_axi_req_t                       corel_cdc_axi_req;
-  dual_helix_pkg::dhs_cl_mp_axi_resp_t                      corel_cdc_axi_resp;
+  dhs_cl_mp_axi_req_t                       corel_cdc_axi_req;
+  dhs_cl_mp_axi_resp_t                      corel_cdc_axi_resp;
 
-  dual_helix_pkg::dhs_sl_sp_axi_req_t  [2:0]                sysl_mstr_device_axi_req;
-  dual_helix_pkg::dhs_sl_sp_axi_resp_t [2:0]                sysl_mstr_device_axi_resp;
+  dhs_sl_sp_axi_req_t  [2:0]                sysl_mstr_device_axi_req;
+  dhs_sl_sp_axi_resp_t [2:0]                sysl_mstr_device_axi_resp;
 
-  dual_helix_pkg::dhs_sl_mp_axi_req_t  [3:0]                sysl_slv_device_axi_req;
-  dual_helix_pkg::dhs_sl_mp_axi_resp_t [3:0]                sysl_slv_device_axi_resp;
+  dhs_sl_mp_axi_req_t  [3:0]                sysl_slv_device_axi_req;
+  dhs_sl_mp_axi_resp_t [3:0]                sysl_slv_device_axi_resp;
 
-  dual_helix_pkg::dhs_axil_req_t                            sysl_to_periphl_axil_req;
-  dual_helix_pkg::dhs_axil_resp_t                           sysl_to_periphl_axil_resp;
+  dhs_axil_req_t                            sysl_to_periphl_axil_req;
+  dhs_axil_resp_t                           sysl_to_periphl_axil_resp;
 
-  dual_helix_pkg::dhs_axil_req_t                            periphl_to_sysl_axil_req;
-  dual_helix_pkg::dhs_axil_resp_t                           periphl_to_sysl_axil_resp;
+  dhs_axil_req_t                            periphl_to_sysl_axil_req;
+  dhs_axil_resp_t                           periphl_to_sysl_axil_resp;
 
-  dual_helix_pkg::dhs_axil_req_t       [1:0]                periphl_mstr_device_axil_req;
-  dual_helix_pkg::dhs_axil_resp_t      [1:0]                periphl_mstr_device_axil_resp;
+  dhs_axil_req_t       [1:0]                periphl_mstr_device_axil_req;
+  dhs_axil_resp_t      [1:0]                periphl_mstr_device_axil_resp;
 
-  dual_helix_pkg::dhs_axil_req_t       [5:0]                periphl_slv_device_axil_req;
-  dual_helix_pkg::dhs_axil_resp_t      [5:0]                periphl_slv_device_axil_resp;
+  dhs_axil_req_t       [5:0]                periphl_slv_device_axil_req;
+  dhs_axil_resp_t      [5:0]                periphl_slv_device_axil_resp;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// Core Instances
@@ -169,16 +219,16 @@ module dual_helix_soc
   obi_2_axi #(
       .OBI_FIFO_DEPTH(4),
       .AXI_FIFO_DEPTH(4),
-      .OBI_ADDRW(dual_helix_pkg::DHS_ADDRW),
-      .OBI_DATAW(dual_helix_pkg::DHS_DATAW),
-      .OBI_STRBW(dual_helix_pkg::DHS_STRBW),
-      .aw_chan_t(dual_helix_pkg::dhs_cl_sp_axi_aw_chan_t),
-      .w_chan_t(dual_helix_pkg::dhs_cl_sp_axi_w_chan_t),
-      .b_chan_t(dual_helix_pkg::dhs_cl_sp_axi_b_chan_t),
-      .ar_chan_t(dual_helix_pkg::dhs_cl_sp_axi_ar_chan_t),
-      .r_chan_t(dual_helix_pkg::dhs_cl_sp_axi_r_chan_t),
-      .axi_req_t(dual_helix_pkg::dhs_cl_sp_axi_req_t),
-      .axi_resp_t(dual_helix_pkg::dhs_cl_sp_axi_resp_t)
+      .OBI_ADDRW(DHS_ADDRW),
+      .OBI_DATAW(DHS_DATAW),
+      .OBI_STRBW(DHS_STRBW),
+      .aw_chan_t(dhs_cl_sp_axi_aw_chan_t),
+      .w_chan_t(dhs_cl_sp_axi_w_chan_t),
+      .b_chan_t(dhs_cl_sp_axi_b_chan_t),
+      .ar_chan_t(dhs_cl_sp_axi_ar_chan_t),
+      .r_chan_t(dhs_cl_sp_axi_r_chan_t),
+      .axi_req_t(dhs_cl_sp_axi_req_t),
+      .axi_resp_t(dhs_cl_sp_axi_resp_t)
   ) core1_instr_bridge (
       .clk_obi_i(core1_clk_i),
       .clk_axi_i(corel_clk_i),
@@ -198,16 +248,16 @@ module dual_helix_soc
   obi_2_axi #(
       .OBI_FIFO_DEPTH(4),
       .AXI_FIFO_DEPTH(4),
-      .OBI_ADDRW(dual_helix_pkg::DHS_ADDRW),
-      .OBI_DATAW(dual_helix_pkg::DHS_DATAW),
-      .OBI_STRBW(dual_helix_pkg::DHS_STRBW),
-      .aw_chan_t(dual_helix_pkg::dhs_cl_sp_axi_aw_chan_t),
-      .w_chan_t(dual_helix_pkg::dhs_cl_sp_axi_w_chan_t),
-      .b_chan_t(dual_helix_pkg::dhs_cl_sp_axi_b_chan_t),
-      .ar_chan_t(dual_helix_pkg::dhs_cl_sp_axi_ar_chan_t),
-      .r_chan_t(dual_helix_pkg::dhs_cl_sp_axi_r_chan_t),
-      .axi_req_t(dual_helix_pkg::dhs_cl_sp_axi_req_t),
-      .axi_resp_t(dual_helix_pkg::dhs_cl_sp_axi_resp_t)
+      .OBI_ADDRW(DHS_ADDRW),
+      .OBI_DATAW(DHS_DATAW),
+      .OBI_STRBW(DHS_STRBW),
+      .aw_chan_t(dhs_cl_sp_axi_aw_chan_t),
+      .w_chan_t(dhs_cl_sp_axi_w_chan_t),
+      .b_chan_t(dhs_cl_sp_axi_b_chan_t),
+      .ar_chan_t(dhs_cl_sp_axi_ar_chan_t),
+      .r_chan_t(dhs_cl_sp_axi_r_chan_t),
+      .axi_req_t(dhs_cl_sp_axi_req_t),
+      .axi_resp_t(dhs_cl_sp_axi_resp_t)
   ) core1_data_bridge (
       .clk_obi_i(core1_clk_i),
       .clk_axi_i(corel_clk_i),
@@ -227,16 +277,16 @@ module dual_helix_soc
   obi_2_axi #(
       .OBI_FIFO_DEPTH(4),
       .AXI_FIFO_DEPTH(4),
-      .OBI_ADDRW(dual_helix_pkg::DHS_ADDRW),
-      .OBI_DATAW(dual_helix_pkg::DHS_DATAW),
-      .OBI_STRBW(dual_helix_pkg::DHS_STRBW),
-      .aw_chan_t(dual_helix_pkg::dhs_cl_sp_axi_aw_chan_t),
-      .w_chan_t(dual_helix_pkg::dhs_cl_sp_axi_w_chan_t),
-      .b_chan_t(dual_helix_pkg::dhs_cl_sp_axi_b_chan_t),
-      .ar_chan_t(dual_helix_pkg::dhs_cl_sp_axi_ar_chan_t),
-      .r_chan_t(dual_helix_pkg::dhs_cl_sp_axi_r_chan_t),
-      .axi_req_t(dual_helix_pkg::dhs_cl_sp_axi_req_t),
-      .axi_resp_t(dual_helix_pkg::dhs_cl_sp_axi_resp_t)
+      .OBI_ADDRW(DHS_ADDRW),
+      .OBI_DATAW(DHS_DATAW),
+      .OBI_STRBW(DHS_STRBW),
+      .aw_chan_t(dhs_cl_sp_axi_aw_chan_t),
+      .w_chan_t(dhs_cl_sp_axi_w_chan_t),
+      .b_chan_t(dhs_cl_sp_axi_b_chan_t),
+      .ar_chan_t(dhs_cl_sp_axi_ar_chan_t),
+      .r_chan_t(dhs_cl_sp_axi_r_chan_t),
+      .axi_req_t(dhs_cl_sp_axi_req_t),
+      .axi_resp_t(dhs_cl_sp_axi_resp_t)
   ) core2_instr_bridge (
       .clk_obi_i(core2_clk_i),
       .clk_axi_i(corel_clk_i),
@@ -256,16 +306,16 @@ module dual_helix_soc
   obi_2_axi #(
       .OBI_FIFO_DEPTH(4),
       .AXI_FIFO_DEPTH(4),
-      .OBI_ADDRW(dual_helix_pkg::DHS_ADDRW),
-      .OBI_DATAW(dual_helix_pkg::DHS_DATAW),
-      .OBI_STRBW(dual_helix_pkg::DHS_STRBW),
-      .aw_chan_t(dual_helix_pkg::dhs_cl_sp_axi_aw_chan_t),
-      .w_chan_t(dual_helix_pkg::dhs_cl_sp_axi_w_chan_t),
-      .b_chan_t(dual_helix_pkg::dhs_cl_sp_axi_b_chan_t),
-      .ar_chan_t(dual_helix_pkg::dhs_cl_sp_axi_ar_chan_t),
-      .r_chan_t(dual_helix_pkg::dhs_cl_sp_axi_r_chan_t),
-      .axi_req_t(dual_helix_pkg::dhs_cl_sp_axi_req_t),
-      .axi_resp_t(dual_helix_pkg::dhs_cl_sp_axi_resp_t)
+      .OBI_ADDRW(DHS_ADDRW),
+      .OBI_DATAW(DHS_DATAW),
+      .OBI_STRBW(DHS_STRBW),
+      .aw_chan_t(dhs_cl_sp_axi_aw_chan_t),
+      .w_chan_t(dhs_cl_sp_axi_w_chan_t),
+      .b_chan_t(dhs_cl_sp_axi_b_chan_t),
+      .ar_chan_t(dhs_cl_sp_axi_ar_chan_t),
+      .r_chan_t(dhs_cl_sp_axi_r_chan_t),
+      .axi_req_t(dhs_cl_sp_axi_req_t),
+      .axi_resp_t(dhs_cl_sp_axi_resp_t)
   ) core2_data_bridge (
       .clk_obi_i(core2_clk_i),
       .clk_axi_i(corel_clk_i),
@@ -287,22 +337,22 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_xbar #(
-      .Cfg(dual_helix_pkg::CoreLinkConfig),
+      .Cfg(CoreLinkConfig),
       .ATOPs('0),
       .Connectivity('1),
-      .slv_aw_chan_t(dual_helix_pkg::dhs_cl_sp_axi_aw_chan_t),
-      .mst_aw_chan_t(dual_helix_pkg::dhs_cl_mp_axi_aw_chan_t),
-      .w_chan_t(dual_helix_pkg::dhs_cl_sp_axi_w_chan_t),
-      .slv_b_chan_t(dual_helix_pkg::dhs_cl_sp_axi_b_chan_t),
-      .mst_b_chan_t(dual_helix_pkg::dhs_cl_mp_axi_b_chan_t),
-      .slv_ar_chan_t(dual_helix_pkg::dhs_cl_sp_axi_ar_chan_t),
-      .mst_ar_chan_t(dual_helix_pkg::dhs_cl_mp_axi_ar_chan_t),
-      .slv_r_chan_t(dual_helix_pkg::dhs_cl_sp_axi_r_chan_t),
-      .mst_r_chan_t(dual_helix_pkg::dhs_cl_mp_axi_r_chan_t),
-      .slv_req_t(dual_helix_pkg::dhs_cl_sp_axi_req_t),
-      .slv_resp_t(dual_helix_pkg::dhs_cl_sp_axi_resp_t),
-      .mst_req_t(dual_helix_pkg::dhs_cl_mp_axi_req_t),
-      .mst_resp_t(dual_helix_pkg::dhs_cl_mp_axi_resp_t),
+      .slv_aw_chan_t(dhs_cl_sp_axi_aw_chan_t),
+      .mst_aw_chan_t(dhs_cl_mp_axi_aw_chan_t),
+      .w_chan_t(dhs_cl_sp_axi_w_chan_t),
+      .slv_b_chan_t(dhs_cl_sp_axi_b_chan_t),
+      .mst_b_chan_t(dhs_cl_mp_axi_b_chan_t),
+      .slv_ar_chan_t(dhs_cl_sp_axi_ar_chan_t),
+      .mst_ar_chan_t(dhs_cl_mp_axi_ar_chan_t),
+      .slv_r_chan_t(dhs_cl_sp_axi_r_chan_t),
+      .mst_r_chan_t(dhs_cl_mp_axi_r_chan_t),
+      .slv_req_t(dhs_cl_sp_axi_req_t),
+      .slv_resp_t(dhs_cl_sp_axi_resp_t),
+      .mst_req_t(dhs_cl_mp_axi_req_t),
+      .mst_resp_t(dhs_cl_mp_axi_resp_t),
       .rule_t(axi_pkg::xbar_rule_32_t)
   ) core_link (
       .clk_i(corel_clk_i),
@@ -312,7 +362,7 @@ module dual_helix_soc
       .slv_ports_resp_o(core_obi_axi_resp),
       .mst_ports_req_o(corel_cdc_axi_req),
       .mst_ports_resp_i(corel_cdc_axi_resp),
-      .addr_map_i(dual_helix_pkg::CoreLinkRule),
+      .addr_map_i(CoreLinkRule),
       .en_default_mst_port_i('1),
       .default_mst_port_i('0)
   );
@@ -322,13 +372,13 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_cdc #(
-      .aw_chan_t (dual_helix_pkg::dhs_cl_mp_axi_aw_chan_t),
-      .w_chan_t  (dual_helix_pkg::dhs_cl_mp_axi_w_chan_t),
-      .b_chan_t  (dual_helix_pkg::dhs_cl_mp_axi_b_chan_t),
-      .ar_chan_t (dual_helix_pkg::dhs_cl_mp_axi_ar_chan_t),
-      .r_chan_t  (dual_helix_pkg::dhs_cl_mp_axi_r_chan_t),
-      .axi_req_t (dual_helix_pkg::dhs_cl_mp_axi_req_t),
-      .axi_resp_t(dual_helix_pkg::dhs_cl_mp_axi_resp_t),
+      .aw_chan_t (dhs_cl_mp_axi_aw_chan_t),
+      .w_chan_t  (dhs_cl_mp_axi_w_chan_t),
+      .b_chan_t  (dhs_cl_mp_axi_b_chan_t),
+      .ar_chan_t (dhs_cl_mp_axi_ar_chan_t),
+      .r_chan_t  (dhs_cl_mp_axi_r_chan_t),
+      .axi_req_t (dhs_cl_mp_axi_req_t),
+      .axi_resp_t(dhs_cl_mp_axi_resp_t),
       .LogDepth  (2),
       .SyncStages(2)
   ) cl2sl_axi_cdc (
@@ -347,11 +397,11 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_ram #(
-      .MEM_BASE    (dual_helix_pkg::BOOT_ROM_BASE),
+      .MEM_BASE    (BOOT_ROM_BASE),
       .MEM_SIZE    (16),
       .ALLOW_WRITES('0),
-      .req_t       (dual_helix_pkg::dhs_sl_mp_axi_req_t),
-      .resp_t      (dual_helix_pkg::dhs_sl_mp_axi_resp_t)
+      .req_t       (dhs_sl_mp_axi_req_t),
+      .resp_t      (dhs_sl_mp_axi_resp_t)
   ) soc_rom (
       .clk_i  (sysl_clk_i),
       .arst_ni(sysl_arst_ni),
@@ -381,22 +431,22 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_xbar #(
-      .Cfg(dual_helix_pkg::SystemLinkConfig),
+      .Cfg(SystemLinkConfig),
       .ATOPs('0),
       .Connectivity('1),
-      .slv_aw_chan_t(dual_helix_pkg::dhs_sl_sp_axi_aw_chan_t),
-      .mst_aw_chan_t(dual_helix_pkg::dhs_sl_mp_axi_aw_chan_t),
-      .w_chan_t(dual_helix_pkg::dhs_sl_sp_axi_w_chan_t),
-      .slv_b_chan_t(dual_helix_pkg::dhs_sl_sp_axi_b_chan_t),
-      .mst_b_chan_t(dual_helix_pkg::dhs_sl_mp_axi_b_chan_t),
-      .slv_ar_chan_t(dual_helix_pkg::dhs_sl_sp_axi_ar_chan_t),
-      .mst_ar_chan_t(dual_helix_pkg::dhs_sl_mp_axi_ar_chan_t),
-      .slv_r_chan_t(dual_helix_pkg::dhs_sl_sp_axi_r_chan_t),
-      .mst_r_chan_t(dual_helix_pkg::dhs_sl_mp_axi_r_chan_t),
-      .slv_req_t(dual_helix_pkg::dhs_sl_sp_axi_req_t),
-      .slv_resp_t(dual_helix_pkg::dhs_sl_sp_axi_resp_t),
-      .mst_req_t(dual_helix_pkg::dhs_sl_mp_axi_req_t),
-      .mst_resp_t(dual_helix_pkg::dhs_sl_mp_axi_resp_t),
+      .slv_aw_chan_t(dhs_sl_sp_axi_aw_chan_t),
+      .mst_aw_chan_t(dhs_sl_mp_axi_aw_chan_t),
+      .w_chan_t(dhs_sl_sp_axi_w_chan_t),
+      .slv_b_chan_t(dhs_sl_sp_axi_b_chan_t),
+      .mst_b_chan_t(dhs_sl_mp_axi_b_chan_t),
+      .slv_ar_chan_t(dhs_sl_sp_axi_ar_chan_t),
+      .mst_ar_chan_t(dhs_sl_mp_axi_ar_chan_t),
+      .slv_r_chan_t(dhs_sl_sp_axi_r_chan_t),
+      .mst_r_chan_t(dhs_sl_mp_axi_r_chan_t),
+      .slv_req_t(dhs_sl_sp_axi_req_t),
+      .slv_resp_t(dhs_sl_sp_axi_resp_t),
+      .mst_req_t(dhs_sl_mp_axi_req_t),
+      .mst_resp_t(dhs_sl_mp_axi_resp_t),
       .rule_t(axi_pkg::xbar_rule_32_t)
   ) system_link (
       .clk_i(sysl_clk_i),
@@ -406,7 +456,7 @@ module dual_helix_soc
       .slv_ports_resp_o(sysl_mstr_device_axi_resp),
       .mst_ports_req_o(sysl_slv_device_axi_req),
       .mst_ports_resp_i(sysl_slv_device_axi_resp),
-      .addr_map_i(dual_helix_pkg::SystemLinkRule),
+      .addr_map_i(SystemLinkRule),
       .en_default_mst_port_i('1),
       .default_mst_port_i('b010101)
   );
@@ -416,18 +466,18 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_to_axi_lite #(
-      .AxiAddrWidth   (dual_helix_pkg::DHS_ADDRW),
-      .AxiDataWidth   (dual_helix_pkg::DHS_DATAW),
-      .AxiIdWidth     (dual_helix_pkg::DHS_SL_SP_IDW),
-      .AxiUserWidth   (dual_helix_pkg::DHS_USERW),
+      .AxiAddrWidth   (DHS_ADDRW),
+      .AxiDataWidth   (DHS_DATAW),
+      .AxiIdWidth     (DHS_SL_SP_IDW),
+      .AxiUserWidth   (DHS_USERW),
       .AxiMaxWriteTxns(1),
       .AxiMaxReadTxns (1),
       .FullBW         (1),
       .FallThrough    (0),
-      .full_req_t     (dual_helix_pkg::dhs_sl_mp_axi_req_t),
-      .full_resp_t    (dual_helix_pkg::dhs_sl_mp_axi_resp_t),
-      .lite_req_t     (dual_helix_pkg::dhs_axil_req_t),
-      .lite_resp_t    (dual_helix_pkg::dhs_axil_resp_t)
+      .full_req_t     (dhs_sl_mp_axi_req_t),
+      .full_resp_t    (dhs_sl_mp_axi_resp_t),
+      .lite_req_t     (dhs_axil_req_t),
+      .lite_resp_t    (dhs_axil_resp_t)
   ) sl2pl_axi2axil_cvtr (
       .clk_i(sysl_clk_i),
       .rst_ni(sysl_arst_ni),
@@ -439,13 +489,13 @@ module dual_helix_soc
   );
 
   axi_cdc #(
-      .aw_chan_t (dual_helix_pkg::dhs_axil_aw_chan_t),
-      .w_chan_t  (dual_helix_pkg::dhs_axil_w_chan_t),
-      .b_chan_t  (dual_helix_pkg::dhs_axil_b_chan_t),
-      .ar_chan_t (dual_helix_pkg::dhs_axil_ar_chan_t),
-      .r_chan_t  (dual_helix_pkg::dhs_axil_r_chan_t),
-      .axi_req_t (dual_helix_pkg::dhs_axil_req_t),
-      .axi_resp_t(dual_helix_pkg::dhs_axil_resp_t),
+      .aw_chan_t (dhs_axil_aw_chan_t),
+      .w_chan_t  (dhs_axil_w_chan_t),
+      .b_chan_t  (dhs_axil_b_chan_t),
+      .ar_chan_t (dhs_axil_ar_chan_t),
+      .r_chan_t  (dhs_axil_r_chan_t),
+      .axi_req_t (dhs_axil_req_t),
+      .axi_resp_t(dhs_axil_resp_t),
       .LogDepth  (2),
       .SyncStages(2)
   ) sl2pl_axi_cdc (
@@ -464,13 +514,13 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_cdc #(
-      .aw_chan_t (dual_helix_pkg::dhs_axil_aw_chan_t),
-      .w_chan_t  (dual_helix_pkg::dhs_axil_w_chan_t),
-      .b_chan_t  (dual_helix_pkg::dhs_axil_b_chan_t),
-      .ar_chan_t (dual_helix_pkg::dhs_axil_ar_chan_t),
-      .r_chan_t  (dual_helix_pkg::dhs_axil_r_chan_t),
-      .axi_req_t (dual_helix_pkg::dhs_axil_req_t),
-      .axi_resp_t(dual_helix_pkg::dhs_axil_resp_t),
+      .aw_chan_t (dhs_axil_aw_chan_t),
+      .w_chan_t  (dhs_axil_w_chan_t),
+      .b_chan_t  (dhs_axil_b_chan_t),
+      .ar_chan_t (dhs_axil_ar_chan_t),
+      .r_chan_t  (dhs_axil_r_chan_t),
+      .axi_req_t (dhs_axil_req_t),
+      .axi_resp_t(dhs_axil_resp_t),
       .LogDepth  (2),
       .SyncStages(2)
   ) pl2sl_axi_cdc (
@@ -531,14 +581,14 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_lite_xbar #(
-      .Cfg(PeripheralLinkCOnfig),
-      .aw_chan_t(dual_helix_pkg::dhs_axil_aw_chan_t),
-      .w_chan_t(dual_helix_pkg::dhs_axil_w_chan_t),
-      .b_chan_t(dual_helix_pkg::dhs_axil_b_chan_t),
-      .ar_chan_t(dual_helix_pkg::dhs_axil_ar_chan_t),
-      .r_chan_t(dual_helix_pkg::dhs_axil_r_chan_t),
-      .axi_req_t(dual_helix_pkg::dhs_axil_req_t),
-      .axi_resp_t(dual_helix_pkg::dhs_axil_resp_t),
+      .Cfg(PeripheralLinkConfig),
+      .aw_chan_t(dhs_axil_aw_chan_t),
+      .w_chan_t(dhs_axil_w_chan_t),
+      .b_chan_t(dhs_axil_b_chan_t),
+      .ar_chan_t(dhs_axil_ar_chan_t),
+      .r_chan_t(dhs_axil_r_chan_t),
+      .axi_req_t(dhs_axil_req_t),
+      .axi_resp_t(dhs_axil_resp_t),
       .rule_t(xbar_rule_32_t)
   ) peripheral_link (
       .clk_i(periphl_clk_i),
@@ -558,8 +608,8 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   apb_2_axil #(
-      .ADDR_WIDTH(dual_helix_pkg::DHS_ADDRW),
-      .DATA_WIDTH(dual_helix_pkg::DHS_DATAW)
+      .ADDR_WIDTH(DHS_ADDRW),
+      .DATA_WIDTH(DHS_DATAW)
   ) apb_slave (
       .arst_ni(periphl_arst_ni),
       .clk_i(periphl_clk_i),
@@ -612,11 +662,11 @@ module dual_helix_soc
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   uart_top #(
-      .req_t(dual_helix_pkg::dhs_axil_req_t),
-      .resp_t(dual_helix_pkg::dhs_axil_resp_t),
-      .MEM_BASE(dual_helix_pkg::UART_BASE),
-      .MEM_SIZE(dual_helix_pkg::DHS_ADDRW),
-      .DATA_WIDTH(dual_helix_pkg::DHS_DATAW)
+      .req_t(dhs_axil_req_t),
+      .resp_t(dhs_axil_resp_t),
+      .MEM_BASE(UART_BASE),
+      .MEM_SIZE(DHS_ADDRW),
+      .DATA_WIDTH(DHS_DATAW)
   ) uart_device (
 
       .arst_ni(periphl_arst_ni),

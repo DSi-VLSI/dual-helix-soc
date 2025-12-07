@@ -27,5 +27,10 @@ ${AXI_DIR}/src/axi_to_axi_lite.sv
 ${AXI_DIR}/src/axi_fifo.sv
 ${AXI_DIR}/src/axi_xbar_unmuxed.sv
 ${AXI_DIR}/src/axi_xbar.sv
+${AXI_DIR}/src/axi_lite_xbar.sv
 ${SOC_DIR}/source/axi_to_simple_if.sv
 ${SOC_DIR}/source/axi_ram.sv
+${AXI_DIR}/src/axi_cdc.sv
+${AXI_DIR}/src/axi_cdc_dst.sv
+${AXI_DIR}/src/axi_cdc_src.sv
+${AXI_DIR}/src/axi_burst_splitter_gran.sv
