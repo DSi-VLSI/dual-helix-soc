@@ -18,9 +18,11 @@ module dual_helix_soc
     input logic periphl_arst_ni,
     input logic apb_slv_arst_ni,
 
-    input  apb_req_t  apb_slv_req,
-    output apb_resp_t apb_slv_resp
+    input  apb_req_t  apb_slv_req_i,
+    output apb_resp_t apb_slv_resp_o,
 
+    input  logic uart_rx_i,
+    output logic uart_tx_o
     // TODO: more I/O pins
 );
 
@@ -508,8 +510,41 @@ module dual_helix_soc
   //// APB Slave Interface
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // periphl_mstr_device_axil_req[1]
-  // periphl_mstr_device_axil_resp[1]
+  apb_2_axil #(
+      .ADDR_WIDTH(dual_helix_pkg::DHS_ADDRW),
+      .DATA_WIDTH(dual_helix_pkg::DHS_DATAW)
+  ) apb_slave (
+      .arst_ni(periphl_arst_ni),
+      .clk_i(periphl_clk_i),
+      .psel_i(apb_slv_req_i.psel),
+      .penable_i(apb_slv_req_i.penable),
+      .paddr_i(apb_slv_req_i.paddr),
+      .pwrite_i(apb_slv_req_i.pwrite),
+      .pwdata_i(apb_slv_req_i.pwdata),
+      .pstrb_i(apb_slv_req_i.pstrb),
+      .pready_o(apb_slv_resp_o.pready),
+      .prdata_o(apb_slv_resp_o.prdata),
+      .pslverr_o(apb_slv_resp_o.pslverr),
+      .awaddr_o(periphl_mstr_device_axil_req[1].aw.addr),
+      .awprot_o(periphl_mstr_device_axil_req[1].aw.prot),
+      .awvalid_o(periphl_mstr_device_axil_req[1].aw_valid),
+      .awready_i(periphl_mstr_device_axil_resp[1].aw_ready),
+      .wdata_o(periphl_mstr_device_axil_req[1].w.data),
+      .wstrb_o(periphl_mstr_device_axil_req[1].w.strb),
+      .wvalid_o(periphl_mstr_device_axil_req[1].w_valid),
+      .wready_i(periphl_mstr_device_axil_resp[1].w_ready),
+      .bresp_i(periphl_mstr_device_axil_resp[1].b.resp),
+      .bvalid_i(periphl_mstr_device_axil_resp[1].b_ready),
+      .bready_o(periphl_mstr_device_axil_req[1].b_valid),
+      .araddr_o(periphl_mstr_device_axil_req[1].ar.addr),
+      .arprot_o(periphl_mstr_device_axil_req[1].ar.prot),
+      .arvalid_o(periphl_mstr_device_axil_req[1].ar_valid),
+      .arready_i(periphl_mstr_device_axil_resp[1].ar_ready),
+      .rdata_i(periphl_mstr_device_axil_resp[1].r.data),
+      .rresp_i(periphl_mstr_device_axil_resp[1].r.resp),
+      .rvalid_i(periphl_mstr_device_axil_resp[1].r_valid),
+      .rready_o(periphl_mstr_device_axil_req[1].r_ready)
+  );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// System Controller
@@ -540,8 +575,8 @@ module dual_helix_soc
       .clk_i(periphl_clk_i),
       .req_i(periphl_slv_device_axil_req[2]),
       .resp_o(periphl_slv_device_axil_resp[2]),
-      .tx_o(),  // TODO
-      .rx_i(),  // TODO
+      .tx_o(uart_tx_o),  // TODO
+      .rx_i(uart_rx_i),  // TODO
       .irq_o()  // TODO
   );
 
