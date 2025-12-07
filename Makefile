@@ -144,3 +144,26 @@ print_logo:
 	@echo -e "\033[1;38m  / // / /_/ / __ |/ /__  / _  / _// /___/ /_>  <  _\ \/ /_/ / /__   \033[0m"
 	@echo -e "\033[1;34m /____/\____/_/ |_/____/ /_//_/___/____/___/_/|_| /___/\____/\___/   \033[0m"
 	@echo -e "\033[1;34m                                                                     \033[0m"
+
+# Search stable commit
+.PHONY: search_stable_commit
+search_stable_commit:
+	@git stash
+	@git checkout main
+	@git pull origin main
+	@git submodule update --init --recursive
+	@git log --oneline --no-abbrev-commit | awk '{print $$1}' > commit_log.txt
+	@echo -e "\033[1;33mSearching for stable commit...\033[0m"
+	@for c in $(shell cat commit_log.txt); do \
+		git checkout $$c; \
+		if make -s clean; then \
+			@echo -e "\033[1;32mStable commit found: $$c\033[0m"; \
+			exit 0; \
+		else \
+			@echo -e "\033[1;31mCommit $$c is unstable.\033[0m"; \
+		fi; \
+	done; \
+	echo -e "\033[1;31mNo stable commit found in the log.\033[0m"; \
+	exit 1;
+	@rm commit_log.txt
+	@git checkout main

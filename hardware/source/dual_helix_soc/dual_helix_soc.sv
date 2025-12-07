@@ -49,8 +49,14 @@ module dual_helix_soc
   dual_helix_pkg::dhs_sl_mp_axi_req_t  [3:0]                sysl_slv_device_axi_req;
   dual_helix_pkg::dhs_sl_mp_axi_resp_t [3:0]                sysl_slv_device_axi_resp;
 
-  dual_helix_pkg::dhs_axil_req_t       [1:0]                sysl_to_periphl_axil_req;
-  dual_helix_pkg::dhs_axil_resp_t      [1:0]                sysl_to_periphl_axil_resp;
+  dual_helix_pkg::dhs_axil_req_t                            sysl_to_periphl_axil_req;
+  dual_helix_pkg::dhs_axil_resp_t                           sysl_to_periphl_axil_resp;
+
+  dual_helix_pkg::dhs_axil_req_t       [1:0]                periphl_mstr_device_axil_req;
+  dual_helix_pkg::dhs_axil_resp_t      [1:0]                periphl_mstr_device_axil_resp;
+
+  dual_helix_pkg::dhs_axil_req_t       [5:0]                periphl_slv_device_axil_req;
+  dual_helix_pkg::dhs_axil_resp_t      [5:0]                periphl_slv_device_axil_resp;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// Core Instances
@@ -69,27 +75,27 @@ module dual_helix_soc
       .rst_ni(core1_arst_ni),
       .pulp_clock_en_i('0),
       .scan_cg_en_i('0),
-      .boot_addr_i(32'h40000000),  // TODO
-      .mtvec_addr_i('0),  // TODO
+      .boot_addr_i(32'h40000000),
+      .mtvec_addr_i('0),
       .dm_halt_addr_i('0),
-      .hart_id_i(1),  // TODO - PAURUTI
+      .hart_id_i(1),
       .dm_exception_addr_i('0),
-      .instr_req_o(core_obi_req_i[0]),  // TODO
-      .instr_gnt_i(core_obi_gnt_o[0]),  // TODO
-      .instr_rvalid_i(core_obi_rvalid_o[0]),  // TODO
-      .instr_addr_o(core_obi_addr_i[0]),  // TODO
-      .instr_rdata_i(core_obi_rdata_o[0]),  // TODO
-      .data_req_o(core_obi_req_i[1]),  // TODO
-      .data_gnt_i(core_obi_gnt_o[1]),  // TODO
-      .data_rvalid_i(core_obi_rvalid_o[1]),  // TODO
-      .data_we_o(core_obi_we_i[1]),  // TODO
-      .data_be_o(core_obi_be_i[1]),  // TODO
-      .data_addr_o(core_obi_addr_i[1]),  // TODO
-      .data_wdata_o(core_obi_wdata_i[1]),  // TODO
-      .data_rdata_i(core_obi_rdata_o[1]),  // TODO
-      .irq_i('0),  // TODO
-      .irq_ack_o(),  // TODO
-      .irq_id_o(),  // TODO
+      .instr_req_o(core_obi_req_i[0]),
+      .instr_gnt_i(core_obi_gnt_o[0]),
+      .instr_rvalid_i(core_obi_rvalid_o[0]),
+      .instr_addr_o(core_obi_addr_i[0]),
+      .instr_rdata_i(core_obi_rdata_o[0]),
+      .data_req_o(core_obi_req_i[1]),
+      .data_gnt_i(core_obi_gnt_o[1]),
+      .data_rvalid_i(core_obi_rvalid_o[1]),
+      .data_we_o(core_obi_we_i[1]),
+      .data_be_o(core_obi_be_i[1]),
+      .data_addr_o(core_obi_addr_i[1]),
+      .data_wdata_o(core_obi_wdata_i[1]),
+      .data_rdata_i(core_obi_rdata_o[1]),
+      .irq_i('0),
+      .irq_ack_o(),
+      .irq_id_o(),
       .debug_req_i('0),
       .debug_havereset_o(),
       .debug_running_o(),
@@ -111,27 +117,27 @@ module dual_helix_soc
       .rst_ni(core2_arst_ni),
       .pulp_clock_en_i('0),
       .scan_cg_en_i('0),
-      .boot_addr_i(32'h40020000),  // TODO
-      .mtvec_addr_i('0),  // TODO
+      .boot_addr_i(32'h40020000),
+      .mtvec_addr_i('0),
       .dm_halt_addr_i('0),
-      .hart_id_i(2),  // TODO - PAURUTI
+      .hart_id_i(2),
       .dm_exception_addr_i('0),
-      .instr_req_o(core_obi_req_i[2]),  // TODO
-      .instr_gnt_i(core_obi_gnt_o[2]),  // TODO
-      .instr_rvalid_i(core_obi_rvalid_o[2]),  // TODO
-      .instr_addr_o(core_obi_addr_i[2]),  // TODO
-      .instr_rdata_i(core_obi_rdata_o[2]),  // TODO
-      .data_req_o(core_obi_req_i[3]),  // TODO
-      .data_gnt_i(core_obi_gnt_o[3]),  // TODO
-      .data_rvalid_i(core_obi_rvalid_o[3]),  // TODO
-      .data_we_o(core_obi_we_i[3]),  // TODO
-      .data_be_o(core_obi_be_i[3]),  // TODO
-      .data_addr_o(core_obi_addr_i[3]),  // TODO
-      .data_wdata_o(core_obi_wdata_i[3]),  // TODO
-      .data_rdata_i(core_obi_rdata_o[3]),  // TODO
-      .irq_i('0),  // TODO
-      .irq_ack_o(),  // TODO
-      .irq_id_o(),  // TODO
+      .instr_req_o(core_obi_req_i[2]),
+      .instr_gnt_i(core_obi_gnt_o[2]),
+      .instr_rvalid_i(core_obi_rvalid_o[2]),
+      .instr_addr_o(core_obi_addr_i[2]),
+      .instr_rdata_i(core_obi_rdata_o[2]),
+      .data_req_o(core_obi_req_i[3]),
+      .data_gnt_i(core_obi_gnt_o[3]),
+      .data_rvalid_i(core_obi_rvalid_o[3]),
+      .data_we_o(core_obi_we_i[3]),
+      .data_be_o(core_obi_be_i[3]),
+      .data_addr_o(core_obi_addr_i[3]),
+      .data_wdata_o(core_obi_wdata_i[3]),
+      .data_rdata_i(core_obi_rdata_o[3]),
+      .irq_i('0),
+      .irq_ack_o(),
+      .irq_id_o(),
       .debug_req_i('0),
       .debug_havereset_o(),
       .debug_running_o(),
@@ -329,25 +335,39 @@ module dual_helix_soc
   );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  //// DMA
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  //// AXI RAM
+  //// AXI ROM
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   axi_ram #(
-      .MEM_BASE    (),                                     // TODO
+      .MEM_BASE    (dual_helix_pkg::BOOT_ROM_BASE),
       .MEM_SIZE    (),                                     // TODO
-      .ALLOW_WRITES('1),
+      .ALLOW_WRITES('0),
       .req_t       (dual_helix_pkg::dhs_sl_mp_axi_req_t),
       .resp_t      (dual_helix_pkg::dhs_sl_mp_axi_resp_t)
-  ) soc_ram (
+  ) soc_rom (
       .clk_i  (sysl_clk_i),
       .arst_ni(sysl_arst_ni),
-      .req_i  (sysl_slv_device_axi_req[1]),
-      .resp_o (sysl_slv_device_axi_resp[1])
+      .req_i  (sysl_slv_device_axi_req[0]),
+      .resp_o (sysl_slv_device_axi_resp[0])
   );
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// AXI ROM
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // TODO: AXI RAM connector instance
+  //sysl_slv_device_axi_req[1]
+  //sysl_slv_device_axi_resp[1]
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// DMA
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // TODO: DMA instance
+  //sysl_slv_device_axi_req[2]
+  //sysl_slv_device_axi_resp[2]
+  //sysl_mstr_device_axi_req[1]
+  //sysl_mstr_device_axi_resp[1]
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// System Link
@@ -381,7 +401,7 @@ module dual_helix_soc
       .mst_ports_resp_i(sysl_slv_device_axi_resp),
       .addr_map_i(dual_helix_pkg::SystemLinkRule),
       .en_default_mst_port_i('1),
-      .default_mst_port_i('0)
+      .default_mst_port_i('b010101)
   );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -405,10 +425,10 @@ module dual_helix_soc
       .clk_i(sysl_clk_i),
       .rst_ni(sysl_arst_ni),
       .test_i('0),
-      .slv_req_i(sysl_slv_device_axi_req[2]),
-      .slv_resp_o(sysl_slv_device_axi_resp[2]),
-      .mst_req_o(sysl_to_periphl_axil_req[0]),
-      .mst_resp_i(sysl_to_periphl_axil_resp[0])
+      .slv_req_i(sysl_slv_device_axi_req[3]),
+      .slv_resp_o(sysl_slv_device_axi_resp[3]),
+      .mst_req_o(sysl_to_periphl_axil_req),
+      .mst_resp_i(sysl_to_periphl_axil_resp)
   );
 
   axi_cdc #(
@@ -424,12 +444,12 @@ module dual_helix_soc
   ) sl2pl_axi_cdc (
       .src_clk_i (sysl_clk_i),
       .src_rst_ni(sysl_arst_ni),
-      .src_req_i (sysl_to_periphl_axil_req[0]),
-      .src_resp_o(sysl_to_periphl_axil_resp[0]),
+      .src_req_i (sysl_to_periphl_axil_req),
+      .src_resp_o(sysl_to_periphl_axil_resp),
       .dst_clk_i (periphl_clk_i),
       .dst_rst_ni(periphl_arst_ni),
-      .dst_req_o (),
-      .dst_resp_i()
+      .dst_req_o (periphl_mstr_device_axil_req[0]),
+      .dst_resp_i(periphl_mstr_device_axil_resp[0])
   );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -449,16 +469,99 @@ module dual_helix_soc
   ) pl2sl_axi_cdc (
       .src_clk_i (periphl_clk_i),
       .src_rst_ni(periphl_arst_ni),
-      .src_req_i (),
-      .src_resp_o(),
+      .src_req_i (periphl_slv_device_axil_req[5]),
+      .src_resp_o(periphl_slv_device_axil_resp[5]),
       .dst_clk_i (sysl_clk_i),
       .dst_rst_ni(sysl_arst_ni),
-      .dst_req_o (sysl_to_periphl_axil_req[1]),
-      .dst_resp_i(sysl_to_periphl_axil_resp[1])
+      .dst_req_o (sysl_mstr_device_axi_req[2]),
+      .dst_resp_i(sysl_mstr_device_axi_resp[2])
   );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  //// APB-TO-AXI-LITE Bridge
+  //// Peripheral Link
   //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  axi_lite_xbar #(
+      .Cfg(PeripheralLinkCOnfig),
+      .aw_chan_t(dual_helix_pkg::dhs_axil_aw_chan_t),
+      .w_chan_t(dual_helix_pkg::dhs_axil_w_chan_t),
+      .b_chan_t(dual_helix_pkg::dhs_axil_b_chan_t),
+      .ar_chan_t(dual_helix_pkg::dhs_axil_ar_chan_t),
+      .r_chan_t(dual_helix_pkg::dhs_axil_r_chan_t),
+      .axi_req_t(dual_helix_pkg::dhs_axil_req_t),
+      .axi_resp_t(dual_helix_pkg::dhs_axil_resp_t),
+      .rule_t(xbar_rule_32_t)  // TODO
+  ) peripheral_link (
+      .clk_i(periphl_clk_i),
+      .rst_ni(periphl_arst_ni),
+      .test_i('0),
+      .slv_ports_req_i(periphl_mstr_device_axil_req),
+      .slv_ports_resp_o(periphl_mstr_device_axil_resp),
+      .mst_ports_req_o(periphl_slv_device_axil_req),
+      .mst_ports_resp_i(periphl_slv_device_axil_resp),
+      .addr_map_i(PeripheralLinkRule),  // TODO
+      .en_default_mst_port_i('1),
+      .default_mst_port_i('b001000100010)  // TODO
+  );
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// APB Slave Interface
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // periphl_mstr_device_axil_req[1]
+  // periphl_mstr_device_axil_resp[1]
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// System Controller
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // periphl_slv_device_axil_req[0]
+  // periphl_slv_device_axil_resp[0]
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// SPI Master Interface
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // periphl_slv_device_axil_req[1]
+  // periphl_slv_device_axil_resp[1]
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// UART Interface
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  uart_top #(
+      .req_t(dual_helix_pkg::dhs_axil_req_t),
+      .resp_t(dual_helix_pkg::dhs_axil_resp_t),
+      .MEM_SIZE(),  // TODO
+      .DATA_WIDTH()  // TODO
+  ) uart_device (
+
+      .arst_ni(periphl_arst_ni),
+      .clk_i(periphl_clk_i),
+      .req_i(periphl_slv_device_axil_req[2]),
+      .resp_o(periphl_slv_device_axil_resp[2]),
+      .tx_o(),  // TODO
+      .rx_i(),  // TODO
+      .irq_o()  // TODO
+  );
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// CLINT - Core Local Interruptor
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // periphl_slv_device_axil_req[3]
+  // periphl_slv_device_axil_resp[3]
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// PLIC - Platform Level Interrupt Controller
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // periphl_slv_device_axil_req[4]
+  // periphl_slv_device_axil_resp[4]
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //// Timers
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 endmodule
