@@ -657,10 +657,10 @@ module dual_helix_soc
   apb_2_axil #(
       .ADDR_WIDTH(DHS_ADDRW),
       .DATA_WIDTH(DHS_DATAW),
-      .apb_req_t (),
-      .apb_resp_t(),
-      .axi_req_t (),
-      .axi_resp_t()
+      .apb_req_t (dhs_apb_req_t),
+      .apb_resp_t(dhs_apb_resp_t),
+      .axi_req_t (dhs_axil_req_t),
+      .axi_resp_t(dhs_axil_resp_t)
   ) apb_slave (
       .apb_clk_i  (apb_slv_clk_i),
       .apb_arst_ni(apb_slv_arst_ni),
