@@ -36,6 +36,7 @@ module dual_helix_soc
   import dual_helix_pkg::dhs_sl_mp_axi_r_chan_t;
   import dual_helix_pkg::dhs_sl_mp_axi_req_t;
   import dual_helix_pkg::dhs_sl_mp_axi_resp_t;
+  import dual_helix_pkg::DHS_SL_MP_IDW;
   import dual_helix_pkg::dhs_sl_sp_axi_ar_chan_t;
   import dual_helix_pkg::dhs_sl_sp_axi_aw_chan_t;
   import dual_helix_pkg::dhs_sl_sp_axi_b_chan_t;
@@ -47,6 +48,7 @@ module dual_helix_soc
   import dual_helix_pkg::DHS_STRBW;
   import dual_helix_pkg::DHS_USERW;
   import dual_helix_pkg::PeripheralLinkConfig;
+  import dual_helix_pkg::PeripheralLinkRule;
   import dual_helix_pkg::SystemLinkConfig;
   import dual_helix_pkg::SystemLinkRule;
   import dual_helix_pkg::UART_BASE;
@@ -468,7 +470,7 @@ module dual_helix_soc
   axi_to_axi_lite #(
       .AxiAddrWidth   (DHS_ADDRW),
       .AxiDataWidth   (DHS_DATAW),
-      .AxiIdWidth     (DHS_SL_SP_IDW),
+      .AxiIdWidth     (DHS_SL_MP_IDW),
       .AxiUserWidth   (DHS_USERW),
       .AxiMaxWriteTxns(1),
       .AxiMaxReadTxns (1),
@@ -631,8 +633,8 @@ module dual_helix_soc
       .wvalid_o(periphl_mstr_device_axil_req[1].w_valid),
       .wready_i(periphl_mstr_device_axil_resp[1].w_ready),
       .bresp_i(periphl_mstr_device_axil_resp[1].b.resp),
-      .bvalid_i(periphl_mstr_device_axil_resp[1].b_ready),
-      .bready_o(periphl_mstr_device_axil_req[1].b_valid),
+      .bready_o(periphl_mstr_device_axil_req[1].b_ready),
+      .bvalid_i(periphl_mstr_device_axil_resp[1].b_valid),
       .araddr_o(periphl_mstr_device_axil_req[1].ar.addr),
       .arprot_o(periphl_mstr_device_axil_req[1].ar.prot),
       .arvalid_o(periphl_mstr_device_axil_req[1].ar_valid),

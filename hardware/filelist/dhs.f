@@ -7,7 +7,10 @@ ${AXI_DIR}/src/axi_pkg.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/package/dual_helix_pkg.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/package/uart_pkg.sv
 
-${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/axil_to_simple_if.sv
+${COMMON_DIR}/rtl/dff.sv
+${COMMON_DIR}/rtl/edge_detector.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/common/axil_to_simple_if.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/common/clk_div.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_reg_if.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_rx.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_top.sv
