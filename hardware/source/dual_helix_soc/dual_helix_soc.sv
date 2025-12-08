@@ -91,8 +91,8 @@ module dual_helix_soc
     // External AXI RAM interface
     output logic ext_ram_clk_o,
     output logic ext_ram_arst_no,
-    output dhs_sl_mp_axi_req_t ext_ram_axi_req_o,
-    input dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
+    output dhs_sl_mp_axi_req_t  ext_ram_axi_req_o,
+    input  dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
 
     // UART interface
     input  logic uart_rx_i,
@@ -105,8 +105,6 @@ module dual_helix_soc
     inout  logic io1_io,
     inout  logic io2_io,
     inout  logic io3_io
-
-
 );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
