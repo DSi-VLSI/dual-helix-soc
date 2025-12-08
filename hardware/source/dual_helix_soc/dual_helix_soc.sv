@@ -70,6 +70,11 @@ module dual_helix_soc
     input logic periphl_arst_ni,
     input logic apb_slv_arst_ni,
 
+    input dhs_addr_t core_1_boot_addr_i,
+    input dhs_data_t core_1_hart_id_i,
+    input dhs_addr_t core_2_boot_addr_i,
+    input dhs_data_t core_2_hart_id_i,
+
     input  apb_req_t  apb_slv_req_i,
     output apb_resp_t apb_slv_resp_o,
 
@@ -135,10 +140,10 @@ module dual_helix_soc
       .rst_ni(core1_arst_ni),
       .pulp_clock_en_i('0),
       .scan_cg_en_i('0),
-      .boot_addr_i(32'h40000000),  // TODO
+      .boot_addr_i(core_1_boot_addr_i),
       .mtvec_addr_i('0),
       .dm_halt_addr_i('0),
-      .hart_id_i(1),  // TODO
+      .hart_id_i(core_1_hart_id_i),
       .dm_exception_addr_i('0),
       .instr_req_o(core_obi_req_i[0]),
       .instr_gnt_i(core_obi_gnt_o[0]),
@@ -177,10 +182,10 @@ module dual_helix_soc
       .rst_ni(core2_arst_ni),
       .pulp_clock_en_i('0),
       .scan_cg_en_i('0),
-      .boot_addr_i(32'h40020000),  // TODO
+      .boot_addr_i(core_2_boot_addr_i),
       .mtvec_addr_i('0),
       .dm_halt_addr_i('0),
-      .hart_id_i(2),  // TODO
+      .hart_id_i(core_2_hart_id_i),
       .dm_exception_addr_i('0),
       .instr_req_o(core_obi_req_i[2]),
       .instr_gnt_i(core_obi_gnt_o[2]),
