@@ -1,57 +1,48 @@
 module apb_2_axil #(
-    parameter int ADDR_WIDTH = 32,
-    parameter int DATA_WIDTH = 32
+    parameter int  ADDR_WIDTH = 32,
+    parameter int  DATA_WIDTH = 32,
+    parameter type apb_req_t  = logic,
+    parameter type apb_resp_t = logic,
+    parameter type axi_req_t  = logic,
+    parameter type axi_resp_t = logic
 ) (
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    // Global signals
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    input logic arst_ni,  // Asynchronous reset, active low
-    input logic clk_i,    // Clock input
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // APB Slave Interface
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    input logic                        psel_i,     // Peripheral select
-    input logic                        penable_i,  // Peripheral enable
-    input logic [      ADDR_WIDTH-1:0] paddr_i,    // Peripheral address
-    input logic                        pwrite_i,   // Peripheral write enable
-    input logic [      DATA_WIDTH-1:0] pwdata_i,   // Peripheral write data
-    input logic [(DATA_WIDTH / 8)-1:0] pstrb_i,    // Peripheral byte strobe
-
-    output logic                  pready_o,  // Peripheral ready
-    output logic [DATA_WIDTH-1:0] prdata_o,  // Peripheral read data
-    output logic                  pslverr_o, // Peripheral slave error
+    input  logic      apb_clk_i,
+    input  logic      apb_arst_ni,
+    input  apb_req_t  apb_req_i,
+    output apb_resp_t apb_resp_o,
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // AXI4-Lite Master Interface Outputs
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    output logic [ADDR_WIDTH-1:0] awaddr_o,   // AXI write address
-    output logic [           2:0] awprot_o,   // AXI write protection type
-    output logic                  awvalid_o,  // AXI write address valid
-    input  logic                  awready_i,  // AXI write address ready
-
-    output logic [    DATA_WIDTH-1:0] wdata_o,   // AXI write data
-    output logic [(DATA_WIDTH/8)-1:0] wstrb_o,   // AXI write strobes
-    output logic                      wvalid_o,  // AXI write data
-    input  logic                      wready_i,  // AXI write ready
-
-    input  logic [1:0] bresp_i,   // AXI write response
-    input  logic       bvalid_i,  // AXI write response valid
-    output logic       bready_o,  // AXI write response ready
-
-    output logic [ADDR_WIDTH-1:0] araddr_o,   // AXI read address
-    output logic [           2:0] arprot_o,   // AXI read protection type
-    output logic                  arvalid_o,  // AXI read address valid
-    input  logic                  arready_i,  // AXI read address ready
-
-    input  logic [DATA_WIDTH-1:0] rdata_i,   // AXI read data
-    input  logic [           1:0] rresp_i,   // AXI read response
-    input  logic                  rvalid_i,  // AXI read valid
-    output logic                  rready_o   // AXI read ready
+    input  logic      axi_clk_i,
+    input  logic      axi_arst_ni,
+    output axi_req_t  axi_req_o,
+    input  axi_resp_t axi_resp_i
 );
+
+  apb_cdc #(
+      .LogDepth(2),
+      .req_t   (apb_req_t),
+      .resp_t  (apb_resp_t),
+      .addr_t  (logic [31:0]),
+      .data_t  (logic [31:0]),
+      .strb_t  (logic [3:0])
+  ) u_apb_cdc (
+      .src_pclk_i   (apb_clk_i),
+      .src_preset_ni(apb_arst_ni),
+      .src_req_i    (apb_req_i),
+      .src_resp_o   (apb_resp_o),
+      .dst_pclk_i   (axi_clk_i),
+      .dst_preset_ni(axi_arst_ni),
+      .dst_req_o    (axi_req_o),
+      .dst_resp_i   (axi_resp_i)
+  );
 
   typedef enum int {
     IDLE,
@@ -72,51 +63,50 @@ module apb_2_axil #(
 
   always_ff @(posedge clk_i or negedge arst_ni) begin
     if (~arst_ni) begin
-      prdata_o  <= '0;
-      pslverr_o <= '0;
+      apb_resp_o.prdata  <= '0;
+      apb_resp_o.pslverr <= '0;
     end else if (response_latch_en) begin
-      prdata_o  <= pwrite_i ? wdata_o : rdata_i;
-      pslverr_o <= pwrite_i ? bresp_i[1] : rresp_i[1];
+      apb_resp_o.prdata  <= apb_req_i.pwrite ? axi_req_o.w.data : axi_resp_i.r.data;
+      apb_resp_o.pslverr <= apb_req_i.pwrite ? axi_resp_i.b.resp[1] : axi_resp_i.r.resp[1];
     end else if (response_clear) begin
-      prdata_o  <= '0;
-      pslverr_o <= '0;
+      apb_resp_o.prdata  <= '0;
+      apb_resp_o.pslverr <= '0;
     end
   end
 
+  always_comb axi_req_o.aw.addr = apb_req_i.paddr;
+  always_comb axi_req_o.aw.prot = '0;
 
-  always_comb awaddr_o = paddr_i;
-  always_comb awprot_o = '0;
+  always_comb axi_req_o.w.data = apb_req_i.pwdata;
+  always_comb axi_req_o.w.strb = apb_req_i.pstrb;
 
-  always_comb wdata_o = pwdata_i;
-  always_comb wstrb_o = pstrb_i;
-
-  always_comb araddr_o = paddr_i;
-  always_comb arprot_o = '0;
+  always_comb axi_req_o.ar.addr = apb_req_i.paddr;
+  always_comb axi_req_o.ar.prot = '0;
 
   always_comb begin
 
     next_state        = current_state;
-    awvalid_o         = '0;
-    wvalid_o          = '0;
-    bready_o          = '0;
-    arvalid_o         = '0;
-    rready_o          = '0;
+    axi_req_o.aw_valid = '0;
+    axi_req_o.w_valid  = '0;
+    axi_req_o.b_ready  = '0;
+    axi_req_o.ar_valid = '0;
+    axi_req_o.r_ready  = '0;
     response_clear    = '0;
     response_latch_en = '0;
-    pready_o          = '0;
+    apb_resp_o.pready = '0;
 
     case (current_state)
 
       IDLE: begin
-        if (psel_i && !penable_i) begin
+        if (apb_req_i.psel && !apb_req_i.penable) begin
           next_state = SETUP;
         end
       end
 
       SETUP: begin
         response_clear = 1'b1;
-        if (psel_i && penable_i) begin
-          if (pwrite_i) begin
+        if (apb_req_i.psel && apb_req_i.penable) begin
+          if (apb_req_i.pwrite) begin
             next_state = SEND_AW;
           end else begin
             next_state = SEND_AR;
@@ -125,47 +115,47 @@ module apb_2_axil #(
       end
 
       SEND_AW: begin
-        awvalid_o = 1'b1;
-        if (awready_i) begin
+        axi_req_o.aw_valid = 1'b1;
+        if (axi_resp_i.aw_ready) begin
           next_state = SEND_W;
         end
       end
 
       SEND_W: begin
-        wvalid_o = 1'b1;
-        if (wready_i) begin
+        axi_req_o.w_valid = 1'b1;
+        if (axi_resp_i.w_ready) begin
           next_state = RECV_B;
         end
       end
 
       RECV_B: begin
-        bready_o = 1'b1;
+        axi_req_o.b_ready  = 1'b1;
         response_latch_en = 1'b1;
-        if (bvalid_i) begin
+        if (axi_resp_i.b_valid) begin
           next_state = ACCESS;
         end
       end
 
       SEND_AR: begin
-        arvalid_o = 1'b1;
-        if (arready_i) begin
+        axi_req_o.ar_valid = 1'b1;
+        if (axi_resp_i.ar_ready) begin
           next_state = RECV_R;
         end
       end
 
       RECV_R: begin
-        rready_o = 1'b1;
+        axi_req_o.r_ready  = 1'b1;
         response_latch_en = 1'b1;
-        if (rvalid_i) begin
+        if (axi_resp_i.r_valid) begin
           next_state = ACCESS;
         end
       end
 
       ACCESS: begin
-        pready_o = 1'b1;
-        if (!psel_i) begin
+        apb_resp_o.pready = 1'b1;
+        if (!apb_req_i.psel) begin
           next_state = IDLE;
-        end else if (!penable_i) begin
+        end else if (!apb_req_i.penable) begin
           next_state = SETUP;
         end
       end

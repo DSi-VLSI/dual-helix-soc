@@ -658,38 +658,20 @@ module dual_helix_soc
 
   apb_2_axil #(
       .ADDR_WIDTH(DHS_ADDRW),
-      .DATA_WIDTH(DHS_DATAW)
+      .DATA_WIDTH(DHS_DATAW),
+      .apb_req_t (),
+      .apb_resp_t(),
+      .axi_req_t (),
+      .axi_resp_t()
   ) apb_slave (
-      .arst_ni(periphl_arst_ni),
-      .clk_i(periphl_clk_i),
-      .psel_i(apb_slv_req_i.psel),
-      .penable_i(apb_slv_req_i.penable),
-      .paddr_i(apb_slv_req_i.paddr),
-      .pwrite_i(apb_slv_req_i.pwrite),
-      .pwdata_i(apb_slv_req_i.pwdata),
-      .pstrb_i(apb_slv_req_i.pstrb),
-      .pready_o(apb_slv_resp_o.pready),
-      .prdata_o(apb_slv_resp_o.prdata),
-      .pslverr_o(apb_slv_resp_o.pslverr),
-      .awaddr_o(periphl_mstr_device_axil_req[1].aw.addr),
-      .awprot_o(periphl_mstr_device_axil_req[1].aw.prot),
-      .awvalid_o(periphl_mstr_device_axil_req[1].aw_valid),
-      .awready_i(periphl_mstr_device_axil_resp[1].aw_ready),
-      .wdata_o(periphl_mstr_device_axil_req[1].w.data),
-      .wstrb_o(periphl_mstr_device_axil_req[1].w.strb),
-      .wvalid_o(periphl_mstr_device_axil_req[1].w_valid),
-      .wready_i(periphl_mstr_device_axil_resp[1].w_ready),
-      .bresp_i(periphl_mstr_device_axil_resp[1].b.resp),
-      .bready_o(periphl_mstr_device_axil_req[1].b_ready),
-      .bvalid_i(periphl_mstr_device_axil_resp[1].b_valid),
-      .araddr_o(periphl_mstr_device_axil_req[1].ar.addr),
-      .arprot_o(periphl_mstr_device_axil_req[1].ar.prot),
-      .arvalid_o(periphl_mstr_device_axil_req[1].ar_valid),
-      .arready_i(periphl_mstr_device_axil_resp[1].ar_ready),
-      .rdata_i(periphl_mstr_device_axil_resp[1].r.data),
-      .rresp_i(periphl_mstr_device_axil_resp[1].r.resp),
-      .rvalid_i(periphl_mstr_device_axil_resp[1].r_valid),
-      .rready_o(periphl_mstr_device_axil_req[1].r_ready)
+      .apb_clk_i  (apb_slv_clk_i),
+      .apb_arst_ni(apb_slv_arst_ni),
+      .apb_req_i  (apb_slv_req_i),
+      .apb_resp_o (apb_slv_resp_o),
+      .axi_clk_i  (periphl_clk_i),
+      .axi_arst_ni(periphl_arst_ni),
+      .axi_req_o  (periphl_mstr_device_axil_req[1]),
+      .axi_resp_i (periphl_mstr_device_axil_resp[1])
   );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
