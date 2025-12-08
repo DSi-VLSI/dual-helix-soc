@@ -91,42 +91,46 @@ module dual_helix_soc
     // External AXI RAM interface
     output logic ext_ram_clk_o,
     output logic ext_ram_arst_no,
-    output dhs_sl_mp_axi_req_t  ext_ram_axi_req_o,
-    input  dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
+    output dhs_sl_mp_axi_req_t ext_ram_axi_req_o,
+    input dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
 
     // UART interface
     input  logic uart_rx_i,
     output logic uart_tx_o,
 
     // Quad SPI Interface
-    output logic cs_o,
-    output logic sclk_o,
-    inout  logic io0_io,
-    inout  logic io1_io,
-    inout  logic io2_io,
-    inout  logic io3_io
+    inout logic cs_o,
+    inout logic sclk_o,
+    inout logic io0_io,
+    inout logic io1_io,
+    inout logic io2_io,
+    inout logic io3_io,
+
+    // GPR-N: General Purpose Register
+    output dhs_data_t gpr0_o,
+    output dhs_data_t gpr1_o
 );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// Internal Signals
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
-//   logic                                     core1_clk_i;  // TODO -  internal pll
-//   logic                                     core2_clk_i;  // TODO -  internal pll
-//   logic                                     corel_clk_i;  // TODO -  internal pll
-//   logic                                     sysl_clk_i;  // TODO -  internal pll
-//   logic                                     periphl_clk_i;  // TODO -  internal pll
+  //   logic                                     core1_clk_i;  // TODO -  internal pll
+  //   logic                                     core2_clk_i;  // TODO -  internal pll
+  //   logic                                     corel_clk_i;  // TODO -  internal pll
+  //   logic                                     sysl_clk_i;  // TODO -  internal pll
+  //   logic                                     periphl_clk_i;  // TODO -  internal pll
 
-//   logic                                     core1_arst_ni;  // TODO - glb_arst_ni
-//   logic                                     core2_arst_ni;  // TODO - glb_arst_ni
-//   logic                                     corel_arst_ni;  // TODO - glb_arst_ni
-//   logic                                     sysl_arst_ni;  // TODO - glb_arst_ni
-//   logic                                     periphl_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     core1_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     core2_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     corel_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     sysl_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     periphl_arst_ni;  // TODO - glb_arst_ni
 
-//   dhs_addr_t                                core_1_boot_addr_i;  // TODO - SoC Controller
-//   dhs_data_t                                core_1_hart_id_i;  // TODO - SoC Controller
-//   dhs_addr_t                                core_2_boot_addr_i;  // TODO - SoC Controller
-//   dhs_data_t                                core_2_hart_id_i;  // TODO - SoC Controller
+  //   dhs_addr_t                                core_1_boot_addr_i;  // TODO - SoC Controller
+  //   dhs_data_t                                core_1_hart_id_i;  // TODO - SoC Controller
+  //   dhs_addr_t                                core_2_boot_addr_i;  // TODO - SoC Controller
+  //   dhs_data_t                                core_2_hart_id_i;  // TODO - SoC Controller
 
   logic                [3:0][DHS_ADDRW-1:0] core_obi_addr_i;
   logic                [3:0]                core_obi_we_i;
