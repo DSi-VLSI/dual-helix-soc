@@ -70,14 +70,14 @@ package dual_helix_pkg;
   localparam xbar_cfg_t CoreLinkConfig = '{
       NoSlvPorts : 4,
       NoMstPorts : 1,
-      MaxMstTrans: 1,
-      MaxSlvTrans: 1,
+      MaxMstTrans: 2,
+      MaxSlvTrans: 2,
       FallThrough: 0,
       LatencyMode: axi_pkg::CUT_ALL_PORTS,
-      PipelineStages: 1,
+      PipelineStages: 2,
       AxiIdWidthSlvPorts: DHS_CL_SP_IDW,
       AxiIdUsedSlvPorts: DHS_CL_SP_IDW,
-      UniqueIds: 0,
+      UniqueIds: 1,
       AxiAddrWidth: DHS_ADDRW,
       AxiDataWidth: DHS_DATAW,
       NoAddrRules: NumCoreLinkRules
@@ -97,14 +97,14 @@ package dual_helix_pkg;
   localparam xbar_cfg_t SystemLinkConfig = '{
       NoSlvPorts : 3,
       NoMstPorts : 4,
-      MaxMstTrans: 1,
-      MaxSlvTrans: 1,
+      MaxMstTrans: 2,
+      MaxSlvTrans: 2,
       FallThrough: 0,
       LatencyMode: axi_pkg::CUT_ALL_PORTS,
-      PipelineStages: 1,
+      PipelineStages: 2,
       AxiIdWidthSlvPorts: DHS_SL_SP_IDW,
       AxiIdUsedSlvPorts: DHS_SL_SP_IDW,
-      UniqueIds: '0,
+      UniqueIds: 1,
       AxiAddrWidth: DHS_ADDRW,
       AxiDataWidth: DHS_DATAW,
       NoAddrRules: NumSystemLinkRules
@@ -123,11 +123,11 @@ package dual_helix_pkg;
       '{idx: 5, start_addr: (RAM_BASE), end_addr: (BOOT_ROM_END)}
   };
 
-  localparam xbar_cfg_t PeripheralLinkCOnfig = '{
+  localparam xbar_cfg_t PeripheralLinkConfig = '{
       NoSlvPorts: 2,
       NoMstPorts: 6,
-      MaxMstTrans: 1,
-      MaxSlvTrans: 1,
+      MaxMstTrans: 2,
+      MaxSlvTrans: 2,
       FallThrough: 1'b0,
       LatencyMode: axi_pkg::CUT_ALL_PORTS,
       AxiAddrWidth: DHS_ADDRW,

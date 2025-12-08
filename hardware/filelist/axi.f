@@ -1,3 +1,6 @@
+-d VERILATOR
+-d XSIM
+
 -i ${AXI_DIR}/include
 -i ${COMMON_CELLS_DIR}/include
 
@@ -6,6 +9,12 @@ ${COMMON_CELLS_DIR}/src/cf_math_pkg.sv
 ${SOC_DIR}/package/ariane_axi_pkg.sv
 ${SOC_DIR}/package/soc_pkg.sv
 
+${COMMON_CELLS_DIR}/src/sync.sv
+${COMMON_CELLS_DIR}/src/addr_decode.sv
+${COMMON_CELLS_DIR}/src/addr_decode_dync.sv
+${COMMON_CELLS_DIR}/src/gray_to_binary.sv
+${COMMON_CELLS_DIR}/src/binary_to_gray.sv
+${COMMON_CELLS_DIR}/src/cdc_fifo_gray.sv
 ${COMMON_CELLS_DIR}/src/stream_register.sv
 ${AXI_DIR}/src/axi_atop_filter.sv
 ${COMMON_CELLS_DIR}/src/spill_register_flushable.sv
@@ -27,5 +36,17 @@ ${AXI_DIR}/src/axi_to_axi_lite.sv
 ${AXI_DIR}/src/axi_fifo.sv
 ${AXI_DIR}/src/axi_xbar_unmuxed.sv
 ${AXI_DIR}/src/axi_xbar.sv
+${AXI_DIR}/src/axi_lite_xbar.sv
 ${SOC_DIR}/source/axi_to_simple_if.sv
 ${SOC_DIR}/source/axi_ram.sv
+${AXI_DIR}/src/axi_cdc.sv
+${AXI_DIR}/src/axi_cdc_dst.sv
+${AXI_DIR}/src/axi_cdc_src.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/axi/axi_burst_splitter_gran.sv
+${AXI_DIR}/src/axi_cut.sv
+${AXI_DIR}/src/axi_multicut.sv
+${AXI_DIR}/src/axi_mux.sv
+${AXI_DIR}/src/axi_lite_mux.sv
+${AXI_DIR}/src/axi_lite_demux.sv
+${AXI_DIR}/src/axi_lite_to_axi.sv
+${AXI_DIR}/src/axi_id_prepend.sv

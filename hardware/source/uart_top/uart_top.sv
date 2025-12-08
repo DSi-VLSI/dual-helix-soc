@@ -8,9 +8,9 @@
 module uart_top #(
     parameter type req_t  = uart_pkg::axil_req_t,  // AXI request type
     parameter type resp_t = uart_pkg::axil_resp_t, // AXI response type
-
-    localparam int MEM_SIZE   = 6,  // Register address width (64 byte address space)
-    localparam int DATA_WIDTH = 32  // Data bus width
+    parameter int MEM_BASE   = 0,  // Base address for UART registers
+    parameter int MEM_SIZE   = 6,  // Register address width (64 byte address space)
+    parameter int DATA_WIDTH = 32  // Data bus width
 ) (
     // System interface
     input  logic  arst_ni,  // Active-low asynchronous reset
@@ -106,7 +106,7 @@ module uart_top #(
   axil_to_simple_if #(
       .req_t(req_t),
       .resp_t(resp_t),
-      .MEM_BASE(0),
+      .MEM_BASE(MEM_BASE),
       .MEM_SIZE(MEM_SIZE)
   ) u_cvtr (
       .arst_ni(arst_ni),
@@ -132,12 +132,12 @@ module uart_top #(
       .arst_ni(arst_ni),
       .clk_i(clk_i),
       .mem_we_i(mem_we),
-      .mem_waddr_i(mem_waddr),
+      .mem_waddr_i(mem_waddr[5:0]),
       .mem_wdata_i(mem_wdata),
       .mem_wstrb_i(mem_wstrb),
       .mem_wresp_o(mem_wresp),
       .mem_re_i(mem_re),
-      .mem_raddr_i(mem_raddr),
+      .mem_raddr_i(mem_raddr[5:0]),
       .mem_rdata_o(mem_rdata),
       .mem_rresp_o(mem_rresp),
       .ctrl_clk_en_o(ctrl_clk_en),

@@ -1,4 +1,5 @@
 .SHELL: /bin/bash
+export SHELL=/bin/bash
 
 # Makefile for Dual Helix SoC
 # This Makefile provides targets for building, simulating, and testing the Dual Helix SoC.
@@ -19,6 +20,8 @@ ifeq ($(GUI), 0)
 else
 	SIM_MODE := -gui
 endif
+
+EW_HL := | grep -E "WARNING:|ERROR:|" --color=auto
 
 ####################################################################################################
 # Tools
@@ -78,7 +81,7 @@ ${LOG_DIR}:
 # Macro to compile a file list using XVLOG
 define COMPILE_FLIST
 	echo -e "\033[1;34mCompiling file list: $1\033[0m"
-	cd ${BUILD_DIR} && ${XVLOG} -sv -f $1 -log ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log
+	cd ${BUILD_DIR} && ${XVLOG} -sv -f $1 -log ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log ${EW_HL}
 endef
 
 # Check if the build is up to date by comparing SHA sums of hardware files
@@ -96,7 +99,7 @@ ENV_BUILD:
 	@git submodule update --init --depth 1
 	@$(foreach flist,${FILE_LISTS},$(call COMPILE_FLIST,$(flist));)
 	@echo -e "\033[1;33mElaborating ${TOP}\033[0m"
-	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps
+	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps ${EW_HL}
 	@sha256sum $$(find hardware -type f) > ${BUILD_DIR}/build_$(TOP)
 
 # Target to ensure the build is up to date
