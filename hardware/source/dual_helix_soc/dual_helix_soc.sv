@@ -5,6 +5,7 @@ module dual_helix_soc
   import dual_helix_pkg::BOOT_ROM_BASE;
   import dual_helix_pkg::CoreLinkConfig;
   import dual_helix_pkg::CoreLinkRule;
+  import dual_helix_pkg::dhs_addr_t;
   import dual_helix_pkg::DHS_ADDRW;
   import dual_helix_pkg::dhs_apb_req_t;
   import dual_helix_pkg::dhs_apb_resp_t;
@@ -29,6 +30,7 @@ module dual_helix_soc
   import dual_helix_pkg::dhs_cl_sp_axi_req_t;
   import dual_helix_pkg::dhs_cl_sp_axi_resp_t;
   import dual_helix_pkg::dhs_cl_sp_axi_w_chan_t;
+  import dual_helix_pkg::dhs_data_t;
   import dual_helix_pkg::DHS_DATAW;
   import dual_helix_pkg::dhs_sl_mp_axi_ar_chan_t;
   import dual_helix_pkg::dhs_sl_mp_axi_aw_chan_t;
@@ -45,47 +47,90 @@ module dual_helix_soc
   import dual_helix_pkg::dhs_sl_sp_axi_resp_t;
   import dual_helix_pkg::dhs_sl_sp_axi_w_chan_t;
   import dual_helix_pkg::DHS_SL_SP_IDW;
+  import dual_helix_pkg::dhs_strb_t;
   import dual_helix_pkg::DHS_STRBW;
+  import dual_helix_pkg::dhs_user_t;
   import dual_helix_pkg::DHS_USERW;
   import dual_helix_pkg::PeripheralLinkConfig;
   import dual_helix_pkg::PeripheralLinkRule;
   import dual_helix_pkg::SystemLinkConfig;
   import dual_helix_pkg::SystemLinkRule;
   import dual_helix_pkg::UART_BASE;
-#(
-    parameter type apb_req_t  = dhs_apb_req_t,
-    parameter type apb_resp_t = dhs_apb_resp_t
-) (
-    input logic core1_clk_i,
-    input logic core2_clk_i,
-    input logic corel_clk_i,
-    input logic sysl_clk_i,
-    input logic periphl_clk_i,
+(
+    input logic core1_clk_i,   // TODO -  internal pll
+    input logic core2_clk_i,   // TODO -  internal pll
+    input logic corel_clk_i,   // TODO -  internal pll
+    input logic sysl_clk_i,    // TODO -  internal pll
+    input logic periphl_clk_i, // TODO -  internal pll
+
+    input logic core1_arst_ni,   // TODO - glb_arst_ni
+    input logic core2_arst_ni,   // TODO - glb_arst_ni
+    input logic corel_arst_ni,   // TODO - glb_arst_ni
+    input logic sysl_arst_ni,    // TODO - glb_arst_ni
+    input logic periphl_arst_ni, // TODO - glb_arst_ni
+
+    input dhs_addr_t core_1_boot_addr_i,  // TODO - SoC Controller
+    input dhs_data_t core_1_hart_id_i,    // TODO - SoC Controller
+    input dhs_addr_t core_2_boot_addr_i,  // TODO - SoC Controller
+    input dhs_data_t core_2_hart_id_i,    // TODO - SoC Controller
+
+    // General I/O pins
+    input logic ref_clk_i,
+    input logic glb_arst_ni,
+    input logic boot_mode_i,
+
+    // PLIC signals
+    input logic [3:0] ext_int_i,
+
+    // APB slave interface for APB master
     input logic apb_slv_clk_i,
-
-    input logic core1_arst_ni,
-    input logic core2_arst_ni,
-    input logic corel_arst_ni,
-    input logic sysl_arst_ni,
-    input logic periphl_arst_ni,
     input logic apb_slv_arst_ni,
+    input dhs_apb_req_t apb_slv_req_i,
+    output dhs_apb_resp_t apb_slv_resp_o,
 
-    input  logic      apb_slv_clk_i,
-    input  logic      apb_slv_arst_ni,
-    input  apb_req_t  apb_slv_req_i,
-    output apb_resp_t apb_slv_resp_o,
+    // External AXI RAM interface
+    output logic ext_ram_clk_o,
+    output logic ext_ram_arst_no,
+    output dhs_sl_mp_axi_req_t ext_ram_axi_req_o,
+    input dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
 
-    output dhs_sl_mp_axi_req_t  ext_ram_axi_req_o,
-    input  dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
-
+    // UART interface
     input  logic uart_rx_i,
-    output logic uart_tx_o
-    // TODO: more I/O pins
+    output logic uart_tx_o,
+
+    // Quad SPI Interface
+    inout logic cs_o,
+    inout logic sclk_o,
+    inout logic io0_io,
+    inout logic io1_io,
+    inout logic io2_io,
+    inout logic io3_io,
+
+    // GPR-N: General Purpose Register
+    output dhs_data_t gpr0_o,
+    output dhs_data_t gpr1_o
 );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// Internal Signals
   //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //   logic                                     core1_clk_i;  // TODO -  internal pll
+  //   logic                                     core2_clk_i;  // TODO -  internal pll
+  //   logic                                     corel_clk_i;  // TODO -  internal pll
+  //   logic                                     sysl_clk_i;  // TODO -  internal pll
+  //   logic                                     periphl_clk_i;  // TODO -  internal pll
+
+  //   logic                                     core1_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     core2_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     corel_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     sysl_arst_ni;  // TODO - glb_arst_ni
+  //   logic                                     periphl_arst_ni;  // TODO - glb_arst_ni
+
+  //   dhs_addr_t                                core_1_boot_addr_i;  // TODO - SoC Controller
+  //   dhs_data_t                                core_1_hart_id_i;  // TODO - SoC Controller
+  //   dhs_addr_t                                core_2_boot_addr_i;  // TODO - SoC Controller
+  //   dhs_data_t                                core_2_hart_id_i;  // TODO - SoC Controller
 
   logic                [3:0][DHS_ADDRW-1:0] core_obi_addr_i;
   logic                [3:0]                core_obi_we_i;
@@ -137,10 +182,10 @@ module dual_helix_soc
       .rst_ni(core1_arst_ni),
       .pulp_clock_en_i('0),
       .scan_cg_en_i('0),
-      .boot_addr_i(32'h40000000),  // TODO
+      .boot_addr_i(core_1_boot_addr_i),
       .mtvec_addr_i('0),
       .dm_halt_addr_i('0),
-      .hart_id_i(1),  // TODO
+      .hart_id_i(core_1_hart_id_i),
       .dm_exception_addr_i('0),
       .instr_req_o(core_obi_req_i[0]),
       .instr_gnt_i(core_obi_gnt_o[0]),
@@ -179,10 +224,10 @@ module dual_helix_soc
       .rst_ni(core2_arst_ni),
       .pulp_clock_en_i('0),
       .scan_cg_en_i('0),
-      .boot_addr_i(32'h40020000),  // TODO
+      .boot_addr_i(core_2_boot_addr_i),
       .mtvec_addr_i('0),
       .dm_halt_addr_i('0),
-      .hart_id_i(2),  // TODO
+      .hart_id_i(core_2_hart_id_i),
       .dm_exception_addr_i('0),
       .instr_req_o(core_obi_req_i[2]),
       .instr_gnt_i(core_obi_gnt_o[2]),
@@ -417,6 +462,8 @@ module dual_helix_soc
   //// AXI RAM
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
+  assign ext_ram_clk_o = sysl_clk_i;
+  assign ext_ram_arst_no = sysl_arst_ni;
   assign ext_ram_axi_req_o = sysl_slv_device_axi_req[1];
   assign sysl_slv_device_axi_resp[1] = ext_ram_axi_resp_i;
 
@@ -614,10 +661,10 @@ module dual_helix_soc
   apb_2_axil #(
       .ADDR_WIDTH(DHS_ADDRW),
       .DATA_WIDTH(DHS_DATAW),
-      .apb_req_t (),
-      .apb_resp_t(),
-      .axi_req_t (),
-      .axi_resp_t()
+      .apb_req_t (dhs_apb_req_t),
+      .apb_resp_t(dhs_apb_resp_t),
+      .axi_req_t (dhs_axil_req_t),
+      .axi_resp_t(dhs_axil_resp_t)
   ) apb_slave (
       .apb_clk_i  (apb_slv_clk_i),
       .apb_arst_ni(apb_slv_arst_ni),
