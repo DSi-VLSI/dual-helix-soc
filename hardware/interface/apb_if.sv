@@ -29,6 +29,8 @@ interface apb_if #(
                                 input logic [DATA_WIDTH-1:0] write_data,
                                 input logic [DATA_WIDTH/8-1:0] write_strobe,
                                 output logic [DATA_WIDTH-1:0] read_data);
+
+    @(posedge clk_i);
     // Setup phase
     psel    <= 1'b1;
     penable <= 1'b0;
@@ -43,7 +45,7 @@ interface apb_if #(
     // Enable phase
     penable <= 1'b1;
 
-    do @(posedge clk_i); while (!pready);
+    do @(posedge clk_i); while (pready !== 1'b1);
 
     // Capture read data
     read_data = prdata;

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="dual_helix_soc_tb.wdb" id="1">
+         <top_modules>
+            <top_module name="apb_pkg" />
+            <top_module name="axi_pkg" />
+            <top_module name="cf_math_pkg" />
+            <top_module name="cv32e40p_apu_core_pkg" />
+            <top_module name="cv32e40p_fpu_pkg" />
+            <top_module name="cv32e40p_pkg" />
+            <top_module name="dual_helix_pkg" />
+            <top_module name="dual_helix_soc_tb" />
+            <top_module name="fpnew_pkg" />
+            <top_module name="uart_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="270,836 ps"></ZoomStartTime>
+      <ZoomEndTime time="277,897 ps"></ZoomEndTime>
+      <Cursor1Time time="275,080 ps"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="196"></NameColumnWidth>
+      <ValueColumnWidth column_width="173"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="18" />
+   <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/clk_i">
+      <obj_property name="ElementShortName">clk_i</obj_property>
+      <obj_property name="ObjectShortName">clk_i</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/arst_ni">
+      <obj_property name="ElementShortName">arst_ni</obj_property>
+      <obj_property name="ObjectShortName">arst_ni</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/req_i">
+      <obj_property name="ElementShortName">req_i</obj_property>
+      <obj_property name="ObjectShortName">req_i</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/req_i.aw">
+         <obj_property name="ElementShortName">.aw</obj_property>
+         <obj_property name="ObjectShortName">.aw</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/req_i.aw_valid">
+         <obj_property name="ElementShortName">.aw_valid</obj_property>
+         <obj_property name="ObjectShortName">.aw_valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/req_i.w">
+         <obj_property name="ElementShortName">.w</obj_property>
+         <obj_property name="ObjectShortName">.w</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/req_i.w_valid">
+         <obj_property name="ElementShortName">.w_valid</obj_property>
+         <obj_property name="ObjectShortName">.w_valid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/req_i.b_ready">
+         <obj_property name="ElementShortName">.b_ready</obj_property>
+         <obj_property name="ObjectShortName">.b_ready</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/req_i.ar">
+         <obj_property name="ElementShortName">.ar</obj_property>
+         <obj_property name="ObjectShortName">.ar</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/req_i.ar_valid">
+         <obj_property name="ElementShortName">.ar_valid</obj_property>
+         <obj_property name="ObjectShortName">.ar_valid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/req_i.r_ready">
+         <obj_property name="ElementShortName">.r_ready</obj_property>
+         <obj_property name="ObjectShortName">.r_ready</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/resp_o">
+      <obj_property name="ElementShortName">resp_o</obj_property>
+      <obj_property name="ObjectShortName">resp_o</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/resp_o.aw_ready">
+         <obj_property name="ElementShortName">.aw_ready</obj_property>
+         <obj_property name="ObjectShortName">.aw_ready</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/resp_o.ar_ready">
+         <obj_property name="ElementShortName">.ar_ready</obj_property>
+         <obj_property name="ObjectShortName">.ar_ready</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/resp_o.w_ready">
+         <obj_property name="ElementShortName">.w_ready</obj_property>
+         <obj_property name="ObjectShortName">.w_ready</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/resp_o.b_valid">
+         <obj_property name="ElementShortName">.b_valid</obj_property>
+         <obj_property name="ObjectShortName">.b_valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/resp_o.b">
+         <obj_property name="ElementShortName">.b</obj_property>
+         <obj_property name="ObjectShortName">.b</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/resp_o.r_valid">
+         <obj_property name="ElementShortName">.r_valid</obj_property>
+         <obj_property name="ObjectShortName">.r_valid</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/resp_o.r">
+         <obj_property name="ElementShortName">.r</obj_property>
+         <obj_property name="ObjectShortName">.r</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/mem_we_o">
+      <obj_property name="ElementShortName">mem_we_o</obj_property>
+      <obj_property name="ObjectShortName">mem_we_o</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/mem_waddr_o">
+      <obj_property name="ElementShortName">mem_waddr_o[30:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_waddr_o[30:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/mem_wdata_o">
+      <obj_property name="ElementShortName">mem_wdata_o[3:0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_wdata_o[3:0][7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/mem_wstrb_o">
+      <obj_property name="ElementShortName">mem_wstrb_o[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_wstrb_o[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/mem_wresp_i">
+      <obj_property name="ElementShortName">mem_wresp_i[1:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_wresp_i[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/mem_re_o">
+      <obj_property name="ElementShortName">mem_re_o</obj_property>
+      <obj_property name="ObjectShortName">mem_re_o</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/mem_raddr_o">
+      <obj_property name="ElementShortName">mem_raddr_o[30:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_raddr_o[30:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/mem_rdata_i">
+      <obj_property name="ElementShortName">mem_rdata_i[3:0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_rdata_i[3:0][7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/mem_rresp_i">
+      <obj_property name="ElementShortName">mem_rresp_i[1:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_rresp_i[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/MEM_BASE">
+      <obj_property name="ElementShortName">MEM_BASE[63:0]</obj_property>
+      <obj_property name="ObjectShortName">MEM_BASE[63:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/MEM_SIZE">
+      <obj_property name="ElementShortName">MEM_SIZE[31:0]</obj_property>
+      <obj_property name="ObjectShortName">MEM_SIZE[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/dual_helix_soc_tb/ext_ram/ALLOW_WRITES">
+      <obj_property name="ElementShortName">ALLOW_WRITES</obj_property>
+      <obj_property name="ObjectShortName">ALLOW_WRITES</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/MEM_AW">
+      <obj_property name="ElementShortName">MEM_AW[31:0]</obj_property>
+      <obj_property name="ObjectShortName">MEM_AW[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/dual_helix_soc_tb/ext_ram/MEM_DW">
+      <obj_property name="ElementShortName">MEM_DW[31:0]</obj_property>
+      <obj_property name="ObjectShortName">MEM_DW[31:0]</obj_property>
+   </wvobject>
+</wave_config>

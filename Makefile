@@ -9,7 +9,7 @@ export SHELL=/bin/bash
 # Variables
 ####################################################################################################
 
-TOP := dummy_tb
+TOP := dual_helix_soc_tb
 TEST := default
 DEBUG := 0
 GUI := 0
@@ -21,7 +21,8 @@ else
 	SIM_MODE := -gui
 endif
 
-EW_HL := | grep -E "WARNING:|ERROR:|" --color=auto
+EW_HL := | grep -E "WARNING:|ERROR:|" --color=auto || true
+EW_O := | grep -E "WARNING:|ERROR:" --color=auto || true
 
 ####################################################################################################
 # Tools
@@ -80,8 +81,8 @@ ${LOG_DIR}:
 
 # Macro to compile a file list using XVLOG
 define COMPILE_FLIST
-	echo -e "\033[1;34mCompiling file list: $1\033[0m"
-	cd ${BUILD_DIR} && ${XVLOG} -sv -f $1 -log ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log ${EW_HL}
+	echo -e "\033[1;34mCompiling file list: $(shell basename $1):\033[0m ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log"
+	cd ${BUILD_DIR} && ${XVLOG} -sv -d VERILATOR -d XSIM -f $1 -log ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log ${EW_O}
 endef
 
 # Check if the build is up to date by comparing SHA sums of hardware files
@@ -98,8 +99,8 @@ ENV_BUILD:
 	@make -s ${LOG_DIR}
 	@git submodule update --init --depth 1
 	@$(foreach flist,${FILE_LISTS},$(call COMPILE_FLIST,$(flist));)
-	@echo -e "\033[1;33mElaborating ${TOP}\033[0m"
-	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps ${EW_HL}
+	@echo -e "\033[1;33mElaborating ${TOP}:\033[0m ${LOG_DIR}/elab_${TOP}.log"
+	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps ${EW_O}
 	@sha256sum $$(find hardware -type f) > ${BUILD_DIR}/build_$(TOP)
 
 # Target to ensure the build is up to date
@@ -120,12 +121,12 @@ common_sim_checks:
 # Run the simulation using XSIM
 .PHONY: simulate
 simulate:
+	@make -s print_logo
 	@make -s ${BUILD_DIR}/build_$(TOP)
 	@make -s ${LOG_DIR}
 	@make -s common_sim_checks
-	@echo -e "\033[7;33m Simulating ${TOP} \033[0m"
-	@cd ${BUILD_DIR} && ${XSIM} ${TOP} ${SIM_MODE} -f xsim_args -log ${LOG_DIR}/xsim_${TOP}.log
-	@make -s print_logo
+	@echo -e "\033[1;35mSimulating ${TOP}:\033[0m ${LOG_DIR}/xsim_${TOP}_${TEST}.log"
+	@cd ${BUILD_DIR} && ${XSIM} ${TOP} ${SIM_MODE} -f xsim_args -log ${LOG_DIR}/xsim_${TOP}_${TEST}.log
 
 # Compile and prepare test program using RISC-V GCC tools
 .PHONY: test
@@ -147,3 +148,12 @@ print_logo:
 	@echo -e "\033[1;38m  / // / /_/ / __ |/ /__  / _  / _// /___/ /_>  <  _\ \/ /_/ / /__   \033[0m"
 	@echo -e "\033[1;34m /____/\____/_/ |_/____/ /_//_/___/____/___/_/|_| /___/\____/\___/   \033[0m"
 	@echo -e "\033[1;34m                                                                     \033[0m"
+
+####################################################################################################
+# CUSTOM TARGETS
+####################################################################################################
+
+test_hello_world_x2:
+	@make -s test TEST=hello_world HART_ID=0
+	@make -s test TEST=hello_world HART_ID=1
+	@make -s simulate TOP=dual_helix_soc_tb TEST=$@ DEBUG=${DEBUG} GUI=${GUI}

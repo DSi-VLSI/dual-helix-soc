@@ -1,6 +1,3 @@
--d VERILATOR
--d XSIM
-
 -i ${AXI_DIR}/include
 -i ${COMMON_CELLS_DIR}/include
 

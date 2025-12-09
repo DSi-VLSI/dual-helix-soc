@@ -3,6 +3,11 @@ module apb_2_axil #(
     parameter int  DATA_WIDTH = 32,
     parameter type apb_req_t  = logic,
     parameter type apb_resp_t = logic,
+    parameter type aw_chan_t  = logic,
+    parameter type w_chan_t   = logic,
+    parameter type b_chan_t   = logic,
+    parameter type ar_chan_t  = logic,
+    parameter type r_chan_t   = logic,
     parameter type axi_req_t  = logic,
     parameter type axi_resp_t = logic
 ) (
@@ -26,27 +31,30 @@ module apb_2_axil #(
     input  axi_resp_t axi_resp_i
 );
 
-  apb_req_t  fast_apb_req;
-  apb_resp_t fast_apb_resp;
+  axi_req_t intr_axi_req;
+  axi_resp_t intr_axi_resp;
 
   logic cst_arst_n;
 
-  apb_cdc #(
-      .LogDepth(2),
-      .req_t   (apb_req_t),
-      .resp_t  (apb_resp_t),
-      .addr_t  (logic [31:0]),
-      .data_t  (logic [31:0]),
-      .strb_t  (logic [3:0])
-  ) u_apb_cdc (
-      .src_pclk_i   (apb_clk_i),
-      .src_preset_ni(apb_arst_ni),
-      .src_req_i    (apb_req_i),
-      .src_resp_o   (apb_resp_o),
-      .dst_pclk_i   (axi_clk_i),
-      .dst_preset_ni(axi_arst_ni),
-      .dst_req_o    (fast_apb_req),
-      .dst_resp_i   (fast_apb_resp)
+  axi_cdc #(
+      .aw_chan_t (aw_chan_t),
+      .w_chan_t  (w_chan_t),
+      .b_chan_t  (b_chan_t),
+      .ar_chan_t (ar_chan_t),
+      .r_chan_t  (r_chan_t),
+      .axi_req_t (axi_req_t),
+      .axi_resp_t(axi_resp_t),
+      .LogDepth  (2),
+      .SyncStages(2)
+  ) u_axi_cdc (
+      .src_clk_i (apb_clk_i),
+      .src_rst_ni(apb_arst_ni),
+      .src_req_i (intr_axi_req),
+      .src_resp_o(intr_axi_resp),
+      .dst_clk_i (axi_clk_i),
+      .dst_rst_ni(axi_arst_ni),
+      .dst_req_o (axi_req_o),
+      .dst_resp_i(axi_resp_i)
   );
 
   typedef enum int {
@@ -66,52 +74,52 @@ module apb_2_axil #(
   logic   response_clear;
   logic   response_latch_en;
 
-  always_ff @(posedge axi_clk_i or negedge cst_arst_n) begin
+  always_ff @(posedge apb_clk_i or negedge cst_arst_n) begin
     if (~cst_arst_n) begin
-      fast_apb_resp.prdata  <= '0;
-      fast_apb_resp.pslverr <= '0;
+      apb_resp_o.prdata  <= '0;
+      apb_resp_o.pslverr <= '0;
     end else if (response_latch_en) begin
-      fast_apb_resp.prdata  <= fast_apb_req.pwrite ? axi_req_o.w.data : axi_resp_i.r.data;
-      fast_apb_resp.pslverr <= fast_apb_req.pwrite ? axi_resp_i.b.resp[1] : axi_resp_i.r.resp[1];
+      apb_resp_o.prdata  <= apb_req_i.pwrite ? intr_axi_req.w.data : intr_axi_resp.r.data;
+      apb_resp_o.pslverr <= apb_req_i.pwrite ? intr_axi_resp.b.resp[1] : intr_axi_resp.r.resp[1];
     end else if (response_clear) begin
-      fast_apb_resp.prdata  <= '0;
-      fast_apb_resp.pslverr <= '0;
+      apb_resp_o.prdata  <= '0;
+      apb_resp_o.pslverr <= '0;
     end
   end
 
-  always_comb axi_req_o.aw.addr = fast_apb_req.paddr;
-  always_comb axi_req_o.aw.prot = '0;
+  always_comb intr_axi_req.aw.addr = apb_req_i.paddr;
+  always_comb intr_axi_req.aw.prot = '0;
 
-  always_comb axi_req_o.w.data = fast_apb_req.pwdata;
-  always_comb axi_req_o.w.strb = fast_apb_req.pstrb;
+  always_comb intr_axi_req.w.data = apb_req_i.pwdata;
+  always_comb intr_axi_req.w.strb = apb_req_i.pstrb;
 
-  always_comb axi_req_o.ar.addr = fast_apb_req.paddr;
-  always_comb axi_req_o.ar.prot = '0;
+  always_comb intr_axi_req.ar.addr = apb_req_i.paddr;
+  always_comb intr_axi_req.ar.prot = '0;
 
   always_comb begin
 
-    next_state           = current_state;
-    axi_req_o.aw_valid   = '0;
-    axi_req_o.w_valid    = '0;
-    axi_req_o.b_ready    = '0;
-    axi_req_o.ar_valid   = '0;
-    axi_req_o.r_ready    = '0;
-    response_clear       = '0;
-    response_latch_en    = '0;
-    fast_apb_resp.pready = '0;
+    next_state            = current_state;
+    intr_axi_req.aw_valid = '0;
+    intr_axi_req.w_valid  = '0;
+    intr_axi_req.b_ready  = '0;
+    intr_axi_req.ar_valid = '0;
+    intr_axi_req.r_ready  = '0;
+    response_clear        = '0;
+    response_latch_en     = '0;
+    apb_resp_o.pready     = '0;
 
     case (current_state)
 
       IDLE: begin
-        if (fast_apb_req.psel && !fast_apb_req.penable) begin
+        if (apb_req_i.psel && !apb_req_i.penable) begin
           next_state = SETUP;
         end
       end
 
       SETUP: begin
         response_clear = 1'b1;
-        if (fast_apb_req.psel && fast_apb_req.penable) begin
-          if (fast_apb_req.pwrite) begin
+        if (apb_req_i.psel && apb_req_i.penable) begin
+          if (apb_req_i.pwrite) begin
             next_state = SEND_AW;
           end else begin
             next_state = SEND_AR;
@@ -120,47 +128,47 @@ module apb_2_axil #(
       end
 
       SEND_AW: begin
-        axi_req_o.aw_valid = 1'b1;
-        if (axi_resp_i.aw_ready) begin
+        intr_axi_req.aw_valid = 1'b1;
+        if (intr_axi_resp.aw_ready) begin
           next_state = SEND_W;
         end
       end
 
       SEND_W: begin
-        axi_req_o.w_valid = 1'b1;
-        if (axi_resp_i.w_ready) begin
+        intr_axi_req.w_valid = 1'b1;
+        if (intr_axi_resp.w_ready) begin
           next_state = RECV_B;
         end
       end
 
       RECV_B: begin
-        axi_req_o.b_ready = 1'b1;
+        intr_axi_req.b_ready = 1'b1;
         response_latch_en = 1'b1;
-        if (axi_resp_i.b_valid) begin
+        if (intr_axi_resp.b_valid) begin
           next_state = ACCESS;
         end
       end
 
       SEND_AR: begin
-        axi_req_o.ar_valid = 1'b1;
-        if (axi_resp_i.ar_ready) begin
+        intr_axi_req.ar_valid = 1'b1;
+        if (intr_axi_resp.ar_ready) begin
           next_state = RECV_R;
         end
       end
 
       RECV_R: begin
-        axi_req_o.r_ready = 1'b1;
+        intr_axi_req.r_ready = 1'b1;
         response_latch_en = 1'b1;
-        if (axi_resp_i.r_valid) begin
+        if (intr_axi_resp.r_valid) begin
           next_state = ACCESS;
         end
       end
 
       ACCESS: begin
-        fast_apb_resp.pready = 1'b1;
-        if (!fast_apb_req.psel) begin
+        apb_resp_o.pready = 1'b1;
+        if (!apb_req_i.psel) begin
           next_state = IDLE;
-        end else if (!fast_apb_req.penable) begin
+        end else if (!apb_req_i.penable) begin
           next_state = SETUP;
         end
       end
@@ -174,7 +182,7 @@ module apb_2_axil #(
 
   always_comb cst_arst_n = apb_arst_ni & axi_arst_ni;
 
-  always_ff @(posedge axi_clk_i or negedge cst_arst_n) begin
+  always_ff @(posedge apb_clk_i or negedge cst_arst_n) begin
     if (~cst_arst_n) begin
       current_state <= IDLE;
     end else begin
