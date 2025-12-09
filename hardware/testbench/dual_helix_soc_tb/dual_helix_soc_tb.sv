@@ -281,7 +281,7 @@ module dual_helix_soc_tb;
         // dhs_addr_t addr = UART_BASE;
         automatic dhs_addr_t addr = RAM_BASE;
         automatic dhs_data_t dummy_data, read_data;
-        automatic dhs_addr_t uart_addr[3] = '{UART_BASE, UART_BASE + 'h4, UART_BASE + 'h18};
+        automatic dhs_addr_t uart_addr[3] = '{UART_BASE, UART_BASE + 'h4, UART_BASE + 'h14};
         automatic dhs_data_t uart_config_data[3] = '{32'h00000001, 32'h00000009, 32'h000000ab};
         dummy_data = $urandom;
 
@@ -305,7 +305,7 @@ module dual_helix_soc_tb;
           $display("[%0t] APB WRITE DATA TO  0x%h: 0x%h", $realtime, uart_addr[i],
                    uart_config_data[i]);
           u_apb_if.write(uart_addr[i], uart_config_data[i]);
-          if (uart_addr[i] !== (UART_BASE + 'h18)) begin
+          if (uart_addr[i] !== (UART_BASE + 'h14)) begin
             u_apb_if.read(uart_addr[i], read_data);
             $display("[%0t] APB READ DATA FROM 0x%h: 0x%h", $realtime, uart_addr[i], read_data);
             if (read_data !== uart_config_data[i]) begin
