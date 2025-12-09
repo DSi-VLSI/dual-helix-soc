@@ -370,7 +370,7 @@ module dual_helix_soc_tb;
       //   #1ms;
       //   $display("[%0t] FORCE QUIT", $realtime);
       // end
-      repeat (100) begin
+      repeat (20) begin
         #100us;
         $display("[%0t] TEST IS RUNNING", $realtime);
       end
