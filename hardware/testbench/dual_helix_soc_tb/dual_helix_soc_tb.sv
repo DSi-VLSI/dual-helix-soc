@@ -191,24 +191,6 @@ module dual_helix_soc_tb;
 
   task automatic start_clock();
     fork
-      // forever begin
-      //   core1_clk_i <= '1;
-      //   #(1us / 2000);
-      //   core1_clk_i <= '0;
-      //   #(1us / 2000);
-      // end
-      // forever begin
-      //   core2_clk_i <= '1;
-      //   #(1us / 4000);
-      //   core2_clk_i <= '0;
-      //   #(1us / 4000);
-      // end
-      // forever begin
-      //   corel_clk_i <= '1;
-      //   #(1us / 5000);
-      //   corel_clk_i <= '0;
-      //   #(1us / 5000);
-      // end
       forever begin
         sysl_clk_i <= '1;
         #(1us / 3200);
@@ -227,7 +209,29 @@ module dual_helix_soc_tb;
         apb_slv_clk_i <= '0;
         #(1us / 80);
       end
+    join_none
+  endtask
 
+  task automatic start_core_clocks();
+    fork
+      forever begin
+        core1_clk_i <= '1;
+        #(1us / 2000);
+        core1_clk_i <= '0;
+        #(1us / 2000);
+      end
+      forever begin
+        core2_clk_i <= '1;
+        #(1us / 4000);
+        core2_clk_i <= '0;
+        #(1us / 4000);
+      end
+      forever begin
+        corel_clk_i <= '1;
+        #(1us / 5000);
+        corel_clk_i <= '0;
+        #(1us / 5000);
+      end
     join_none
   endtask
 
@@ -277,11 +281,43 @@ module dual_helix_soc_tb;
         // dhs_addr_t addr = UART_BASE;
         automatic dhs_addr_t addr = RAM_BASE;
         automatic dhs_data_t dummy_data, read_data;
-        dummy_data = 'h1;
-        u_apb_if.write(addr, dummy_data);
-        u_apb_if.read(addr, read_data);
-        $display("APB WRITE DATA TO 0x%h: 0x%h", addr, dummy_data);
-        $display("APB READ DATA FROM 0x%h: 0x%h", addr, read_data);
+        automatic dhs_addr_t uart_addr[3] = '{UART_BASE, UART_BASE + 'h4, UART_BASE + 'h18};
+        automatic dhs_data_t uart_config_data[3] = '{32'h00000001, 32'h00000009, 32'h000000ab};
+        dummy_data = $urandom;
+
+        for (int i = 0; i < 32; i++) begin
+          $display("[%0t] APB WRITE DATA TO  0x%h: 0x%h", $realtime, addr, dummy_data);
+          u_apb_if.write(addr, dummy_data);
+          u_apb_if.read(addr, read_data);
+          $display("[%0t] APB READ DATA FROM 0x%h: 0x%h", $realtime, addr, read_data);
+          if (read_data !== dummy_data) begin
+            $error("\033[1;31mDATA MISMATCH AT ADDRESS 0x%h: WROTE 0x%h, READ 0x%h\033[0m", addr,
+                   dummy_data, read_data);
+          end else begin
+            $display("\033[1;32mDATA MATCH AT ADDRESS 0x%h: 0x%h\033[0m", addr, read_data);
+          end
+          addr = addr + 'h4;
+          dummy_data = dummy_data + 'h1;
+          $display("\n");
+        end
+
+        for (int i = 0; i < 3; i++) begin
+          $display("[%0t] APB WRITE DATA TO  0x%h: 0x%h", $realtime, uart_addr[i],
+                   uart_config_data[i]);
+          u_apb_if.write(uart_addr[i], uart_config_data[i]);
+          if (uart_addr[i] !== (UART_BASE + 'h18)) begin
+            u_apb_if.read(uart_addr[i], read_data);
+            $display("[%0t] APB READ DATA FROM 0x%h: 0x%h", $realtime, uart_addr[i], read_data);
+            if (read_data !== uart_config_data[i]) begin
+              $error("\033[1;31mDATA MISMATCH AT ADDRESS 0x%h: WROTE 0x%h, READ 0x%h\033[0m",
+                     uart_addr[i], uart_config_data[i], read_data);
+            end else begin
+              $display("\033[1;32mDATA MATCH AT ADDRESS 0x%h: 0x%h\033[0m", uart_addr[i],
+                       read_data);
+            end
+          end
+          $display("\n");
+        end
 
         // // AXI
         // $display("WRITE DATA TO 0x%h: 0x%h", addr, dummy_data);
@@ -330,15 +366,15 @@ module dual_helix_soc_tb;
         // join
         // $display("READ DATA FROM 0x%h: 0x%h", addr, axil_slv_resp_o.r.data);
       end
-      begin
-        #1ms;
-        $display("[%0t] FORCE QUIT", $realtime);
-      end
-      forever begin
+      // begin
+      //   #1ms;
+      //   $display("[%0t] FORCE QUIT", $realtime);
+      // end
+      repeat (100) begin
         #100us;
         $display("[%0t] TEST IS RUNNING", $realtime);
       end
-    join_any
+    join
 
     $display("[%0t] TEST DONE", $realtime);
     $finish;

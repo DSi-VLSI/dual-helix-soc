@@ -154,6 +154,6 @@ print_logo:
 ####################################################################################################
 
 test_hello_world_x2:
-	@make -s test TEST=hello_world HART_ID=0
-	@make -s test TEST=hello_world HART_ID=1
+	@make -s test TEST=hello.c HART_ID=0
+	@make -s test TEST=hello.c HART_ID=1
 	@make -s simulate TOP=dual_helix_soc_tb TEST=$@ DEBUG=${DEBUG} GUI=${GUI}
