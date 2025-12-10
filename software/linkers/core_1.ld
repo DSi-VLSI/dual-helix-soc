@@ -15,23 +15,23 @@ MEMORY
 SECTIONS
 {
 
-  .tohost_section 0x20000008 :
+  .tohost_section 0x20000004 (NOLOAD) :
   {
-    . = ALIGN(8);
+    . = ALIGN(4);
     tohost = .;
     QUAD(0);
   } > PERIPHERALS : data
 
-  .fromhost_section 0x20001008 :
+  .fromhost_section 0x2000000C (NOLOAD) :
   {
-    . = ALIGN(8);
+    . = ALIGN(4);
     fromhost = .;
     QUAD(0);
   } > PERIPHERALS : data
 
-  .putchar_stdout_section 0x20002008 (NOLOAD) :
+  .putchar_stdout_section 0x20001000 (NOLOAD) :
   {
-    . = ALIGN(8);
+    . = ALIGN(4);
     putchar_stdout = .;
     QUAD(0);
   } > PERIPHERALS : data

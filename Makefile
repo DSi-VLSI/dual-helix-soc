@@ -14,6 +14,7 @@ TEST := default
 DEBUG := 0
 GUI := 0
 HART_ID := 0
+RAM_BDL := 1
 
 ifeq ($(GUI), 0) 
 	SIM_MODE := -runall
@@ -21,7 +22,7 @@ else
 	SIM_MODE := -gui
 endif
 
-EW_HL := | grep -E "WARNING:|ERROR:|" --color=auto || true
+EW_HL := | grep -E "WARNING:|ERROR:|" --color=auto
 EW_O := | grep -E "WARNING:|ERROR:" --color=auto || true
 
 ####################################################################################################
@@ -117,6 +118,7 @@ ${BUILD_DIR}/build_$(TOP):
 common_sim_checks:
 	@echo "--testplusarg TEST=$(TEST)" > ${BUILD_DIR}/xsim_args
 	@echo "--testplusarg DEBUG=$(DEBUG)" >> ${BUILD_DIR}/xsim_args
+	@echo "--testplusarg RAM_BDL=${RAM_BDL}" >> ${BUILD_DIR}/xsim_args
 
 # Run the simulation using XSIM
 .PHONY: simulate
@@ -126,7 +128,7 @@ simulate:
 	@make -s ${LOG_DIR}
 	@make -s common_sim_checks
 	@echo -e "\033[1;35mSimulating ${TOP}:\033[0m ${LOG_DIR}/xsim_${TOP}_${TEST}.log"
-	@cd ${BUILD_DIR} && ${XSIM} ${TOP} ${SIM_MODE} -f xsim_args -log ${LOG_DIR}/xsim_${TOP}_${TEST}.log
+	@cd ${BUILD_DIR} && ${XSIM} ${TOP} ${SIM_MODE} -f xsim_args -log ${LOG_DIR}/xsim_${TOP}_${TEST}.log ${EW_HL}
 
 # Compile and prepare test program using RISC-V GCC tools
 .PHONY: test
@@ -154,6 +156,8 @@ print_logo:
 ####################################################################################################
 
 test_hello_world_x2:
+	@make -s ${BUILD_DIR}/build_$(TOP) TOP=dual_helix_soc_tb
+	@rm -f ${BUILD_DIR}/prog_*.*
 	@make -s test TEST=hello.c HART_ID=0
 	@make -s test TEST=hello.c HART_ID=1
 	@make -s simulate TOP=dual_helix_soc_tb TEST=$@ DEBUG=${DEBUG} GUI=${GUI}

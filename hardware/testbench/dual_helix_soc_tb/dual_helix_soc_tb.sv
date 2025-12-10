@@ -101,6 +101,10 @@ module dual_helix_soc_tb;
 
   int DEBUG = 0;
 
+  int symbols[int][string];
+
+  int ram_bdl = 1;
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // DUAL HELIX SOC INSTANCE
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -258,6 +262,49 @@ module dual_helix_soc_tb;
     #(hold_time / 2);
   endtask
 
+  function automatic void load_sym(string filename, int index);
+    int file, r;
+    string line;
+    string key;
+    int value;
+    file = $fopen(filename, "r");
+    if (file != 0) begin
+      while (!$feof(
+          file
+      )) begin
+        r = $fgets(line, file);
+        if (r != 0) begin
+          r = $sscanf(line, "%h %*s %s", value, key);
+          symbols[index][key] = value;
+        end
+      end
+    end
+    $fclose(file);
+  endfunction
+
+  task automatic load_hex(string filename);
+    int cnt = 0;  // TODO REMOVE
+    logic [7:0] memb[int];
+    logic [3:0][7:0] memw[int];
+    $readmemh(filename, memb);
+    foreach (memb[i]) begin
+      // $display("BYTE MEM[0x%x]:0x%x", i, memb[i]);
+      memw[i&'hFFFF_FFFC][i&'h0000_0003] = memb[i];
+      // $display("WORD MEM[0x%x]:0x%x", i, memw[i&'hFFFF_FFFC][i&'h0000_0003]);
+    end
+
+    foreach (memw[i]) begin
+      if (ram_bdl) ext_ram.write_mem_w(i, memw[i]);
+      else u_apb_if.write(i, memw[i]);
+      cnt++;
+      if ((cnt % 16) == 0)
+        $display("[%0t] LOADED %0d OF %0d FROM %s", $realtime, cnt, memw.size(), filename);
+    end
+
+    $display("[%0t] LOADED %0d WORDS OF %s", $realtime, memw.size(), filename);
+    // foreach (memw[i]) u_apb_if.write(i, memw[i]);
+  endtask
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // PROCEDURAL
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -273,108 +320,26 @@ module dual_helix_soc_tb;
       $dumpvars(0, dual_helix_soc_tb);
     end
 
+    if ($value$plusargs("RAM_BDL=%d", ram_bdl)) begin
+      $display("[%0t] RAM BACK-DOOR LOAD: %0d", $realtime, ram_bdl);
+    end
+
+    load_sym("prog_0.sym", 0);
+    load_sym("prog_1.sym", 1);
+
+    core_1_boot_addr_i <= symbols[0]["_start"];
+    core_2_boot_addr_i <= symbols[1]["_start"];
+
     apply_reset(100ns);
     start_clock();
 
-    fork
-      begin
-        // dhs_addr_t addr = UART_BASE;
-        automatic dhs_addr_t addr = RAM_BASE;
-        automatic dhs_data_t dummy_data, read_data;
-        automatic dhs_addr_t uart_addr[3] = '{UART_BASE, UART_BASE + 'h4, UART_BASE + 'h14};
-        automatic dhs_data_t uart_config_data[3] = '{32'h00000001, 32'h00000009, 32'h000000ab};
-        dummy_data = $urandom;
+    load_hex("prog_0.hex");
+    load_hex("prog_1.hex");
 
-        for (int i = 0; i < 32; i++) begin
-          $display("[%0t] APB WRITE DATA TO  0x%h: 0x%h", $realtime, addr, dummy_data);
-          u_apb_if.write(addr, dummy_data);
-          u_apb_if.read(addr, read_data);
-          $display("[%0t] APB READ DATA FROM 0x%h: 0x%h", $realtime, addr, read_data);
-          if (read_data !== dummy_data) begin
-            $error("\033[1;31mDATA MISMATCH AT ADDRESS 0x%h: WROTE 0x%h, READ 0x%h\033[0m", addr,
-                   dummy_data, read_data);
-          end else begin
-            $display("\033[1;32mDATA MATCH AT ADDRESS 0x%h: 0x%h\033[0m", addr, read_data);
-          end
-          addr = addr + 'h4;
-          dummy_data = dummy_data + 'h1;
-          $display("\n");
-        end
+    #100ns;
 
-        for (int i = 0; i < 3; i++) begin
-          $display("[%0t] APB WRITE DATA TO  0x%h: 0x%h", $realtime, uart_addr[i],
-                   uart_config_data[i]);
-          u_apb_if.write(uart_addr[i], uart_config_data[i]);
-          if (uart_addr[i] !== (UART_BASE + 'h14)) begin
-            u_apb_if.read(uart_addr[i], read_data);
-            $display("[%0t] APB READ DATA FROM 0x%h: 0x%h", $realtime, uart_addr[i], read_data);
-            if (read_data !== uart_config_data[i]) begin
-              $error("\033[1;31mDATA MISMATCH AT ADDRESS 0x%h: WROTE 0x%h, READ 0x%h\033[0m",
-                     uart_addr[i], uart_config_data[i], read_data);
-            end else begin
-              $display("\033[1;32mDATA MATCH AT ADDRESS 0x%h: 0x%h\033[0m", uart_addr[i],
-                       read_data);
-            end
-          end
-          $display("\n");
-        end
-
-        // // AXI
-        // $display("WRITE DATA TO 0x%h: 0x%h", addr, dummy_data);
-        //
-        // fork
-        //   begin
-        //     axil_slv_req_i.aw <= '0;
-        //     axil_slv_req_i.aw_valid <= '1;
-        //     axil_slv_req_i.aw.addr <= addr;
-        //
-        //     do @(posedge periphl_clk_i); while (!axil_slv_resp_o.aw_ready);
-        //     axil_slv_req_i.aw_valid <= '0;
-        //   end
-        //   begin
-        //     axil_slv_req_i.w <= '0;
-        //     axil_slv_req_i.w_valid <= '1;
-        //     axil_slv_req_i.w.data <= dummy_data;
-        //     axil_slv_req_i.w.strb <= 'hf;
-        //
-        //     do @(posedge periphl_clk_i); while (!axil_slv_resp_o.w_ready);
-        //     axil_slv_req_i.w_valid <= '0;
-        //   end
-        //   begin
-        //     axil_slv_req_i.b_ready <= '1;
-        //
-        //     do @(posedge periphl_clk_i); while (!axil_slv_resp_o.b_valid);
-        //     axil_slv_req_i.b_ready <= '0;
-        //   end
-        // join
-        // fork
-        //   begin
-        //     axil_slv_req_i.ar <= '0;
-        //     axil_slv_req_i.ar_valid <= '1;
-        //     axil_slv_req_i.ar.addr <= addr;
-        //
-        //     do @(posedge periphl_clk_i); while (!axil_slv_resp_o.ar_ready);
-        //     axil_slv_req_i.ar_valid <= '0;
-        //   end
-        //   begin
-        //     axil_slv_req_i.r_ready <= '1;
-        //
-        //     do @(posedge periphl_clk_i); while (!axil_slv_resp_o.r_valid);
-        //     read_data = axil_slv_resp_o.r.data;
-        //     axil_slv_req_i.r_ready <= '0;
-        //   end
-        // join
-        // $display("READ DATA FROM 0x%h: 0x%h", addr, axil_slv_resp_o.r.data);
-      end
-      // begin
-      //   #1ms;
-      //   $display("[%0t] FORCE QUIT", $realtime);
-      // end
-      repeat (20) begin
-        #100us;
-        $display("[%0t] TEST IS RUNNING", $realtime);
-      end
-    join
+    start_core_clocks();
+    #100us;
 
     $display("[%0t] TEST DONE", $realtime);
     $finish;
