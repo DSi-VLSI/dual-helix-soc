@@ -27,7 +27,6 @@ ${CV32E40P_DIR}/rtl/cv32e40p_alu.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_mult.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_apu_disp.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_ex_stage.sv
-${CV32E40P_DIR}/rtl/cv32e40p_load_store_unit.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_cs_registers.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_core.sv
 ${CVFPU_DIR}/src/fpnew_classifier.sv
@@ -68,3 +67,4 @@ ${CVFPU_DIR}/vendor/openc910/C910_RTL_FACTORY/gen_rtl/vfdsu/rtl/ct_vfdsu_pack.v
 ${CVFPU_DIR}/vendor/openc910/C910_RTL_FACTORY/gen_rtl/vfdsu/rtl/ct_vfdsu_ff1.v
 ${CVFPU_DIR}/vendor/openc910/C910_RTL_FACTORY/gen_rtl/vfdsu/rtl/ct_vfdsu_srt_radix16_with_sqrt.v
 ${CVFPU_DIR}/vendor/openc910/C910_RTL_FACTORY/gen_rtl/vfdsu/rtl/ct_vfdsu_srt_radix16_bound_table.v
+${DUAL_HELIX_SOC_DIR}/hardware/source/cv32e40p/cv32e40p_load_store_unit.sv

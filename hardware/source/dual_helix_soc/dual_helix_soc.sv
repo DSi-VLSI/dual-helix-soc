@@ -95,16 +95,16 @@ module dual_helix_soc
     input dhs_sl_mp_axi_resp_t ext_ram_axi_resp_i,
 
     // UART interface
-    input  logic uart_rx_i,
-    output logic uart_tx_o,
+    input  logic uart_rx_i,  // TODO: PAD
+    output logic uart_tx_o,  // TODO: PAD
 
     // Quad SPI Interface
-    inout logic cs_o,
-    inout logic sclk_o,
-    inout logic io0_io,
-    inout logic io1_io,
-    inout logic io2_io,
-    inout logic io3_io,
+    inout wire cs_o,
+    inout wire sclk_o,
+    inout wire io0_io,
+    inout wire io1_io,
+    inout wire io2_io,
+    inout wire io3_io,
 
     // GPR-N: General Purpose Register
     output dhs_data_t gpr0_o,
@@ -663,6 +663,11 @@ module dual_helix_soc
       .DATA_WIDTH(DHS_DATAW),
       .apb_req_t (dhs_apb_req_t),
       .apb_resp_t(dhs_apb_resp_t),
+      .aw_chan_t (dhs_axil_aw_chan_t),
+      .w_chan_t  (dhs_axil_w_chan_t),
+      .b_chan_t  (dhs_axil_b_chan_t),
+      .ar_chan_t (dhs_axil_ar_chan_t),
+      .r_chan_t  (dhs_axil_r_chan_t),
       .axi_req_t (dhs_axil_req_t),
       .axi_resp_t(dhs_axil_resp_t)
   ) apb_slave (
