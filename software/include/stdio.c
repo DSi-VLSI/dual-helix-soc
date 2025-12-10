@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "unistd.h"
+#include "uart.h"
 
 static void pos_putc(char c);
 static inline int isdigit(int a);
@@ -35,8 +36,8 @@ void *memcpy(void *dest, const void *src, size_t n)
 
 void pos_libc_putc_stdout(char c)
 {
-    extern int putchar_stdout;                         // External variable for stdout
-    *(volatile uint32_t *)(long)(&putchar_stdout) = c; // Write character to stdout
+    // extern int putchar_stdout;                         // External variable for stdout
+    REG_DHS_UART_TX_FIFO_DATA = c; // Write character to stdout
 }
 
 static void pos_putc(char c)
