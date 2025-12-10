@@ -1,5 +1,7 @@
 ENTRY(_start)
 
+RAM_PER_CORE = 512M;
+
 PHDRS
 {
   text PT_LOAD FLAGS(5);
@@ -8,7 +10,7 @@ PHDRS
 
 MEMORY
 {
-  RAM (rwx) : ORIGIN = 0x40020000, LENGTH = 128M
+  RAM (rwx) : ORIGIN = 0x40000000 + RAM_PER_CORE, LENGTH = RAM_PER_CORE
   PERIPHERALS (rwx) : ORIGIN = 0x20000000, LENGTH = 0x4000
 }
 
@@ -62,4 +64,6 @@ SECTIONS
   } > RAM : data
 
   _end = ALIGN(8);
+
+  __stack_top = ORIGIN(RAM) + LENGTH(RAM);
 }
