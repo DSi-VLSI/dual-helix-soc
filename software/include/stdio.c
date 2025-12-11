@@ -43,9 +43,10 @@ void uart_req_release() {
     while (REG_DHS_UART_TX_FIFO_STAT > 0) {
         nop_delay(128);
     }
-    if (REG_DHS_UART_ACCESS_ID_GNT_PEEK != (get_hart_id() + 1)) {
-        (void)REG_DHS_UART_ACCESS_ID_GNT;  // Read to clear/pop the grant
+    while (REG_DHS_UART_ACCESS_ID_GNT_PEEK != (get_hart_id() + 1)) {
+        nop_delay(128);
     }
+    (void)REG_DHS_UART_ACCESS_ID_GNT;  // Read to clear/pop the grant
 }
 
 // Function definitions
