@@ -1,11 +1,5 @@
 -i ${COMMON_CELLS_DIR}/include
 
-${CV32E40P_DIR}/rtl/include/cv32e40p_pkg.sv
-${CV32E40P_DIR}/rtl/include/cv32e40p_fpu_pkg.sv
-${CV32E40P_DIR}/rtl/include/cv32e40p_apu_core_pkg.sv
-${COMMON_CELLS_DIR}/src/cf_math_pkg.sv
-${CVFPU_DIR}/src/fpnew_pkg.sv
-
 ${CV32E40P_DIR}/bhv/cv32e40p_sim_clock_gate.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_sleep_unit.sv
 ${CV32E40P_DIR}/rtl/cv32e40p_prefetch_controller.sv

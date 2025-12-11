@@ -1,11 +1,6 @@
 -i ${AXI_DIR}/include
 -i ${COMMON_CELLS_DIR}/include
 
-${AXI_DIR}/src/axi_pkg.sv
-${COMMON_CELLS_DIR}/src/cf_math_pkg.sv
-${SOC_DIR}/package/ariane_axi_pkg.sv
-${SOC_DIR}/package/soc_pkg.sv
-
 ${COMMON_CELLS_DIR}/src/sync.sv
 ${COMMON_CELLS_DIR}/src/addr_decode.sv
 ${COMMON_CELLS_DIR}/src/addr_decode_dync.sv
