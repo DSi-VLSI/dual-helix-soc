@@ -116,5 +116,6 @@ package uart_pkg;
 
   localparam int TX_FIFO_SIZE = 8;
   localparam int RX_FIFO_SIZE = 8;
+  localparam int AID_FIFO_SIZE = 8;
 
 endpackage

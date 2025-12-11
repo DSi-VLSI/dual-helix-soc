@@ -100,6 +100,17 @@ module uart_top #(
   logic [TX_FIFO_SIZE-1:0] tx_fifo_count_temp;
   logic [RX_FIFO_SIZE-1:0] rx_fifo_count_temp;
 
+  //----------------------------------------------------------------------------
+  // Access ID FIFO signals
+  //----------------------------------------------------------------------------
+
+  logic [             7:0] access_id_req;
+  logic                    access_id_req_valid;
+  logic                    access_id_req_ready;
+  logic [             7:0] access_id_gnt;
+  logic                    access_id_gnt_valid;
+  logic                    access_id_gnt_ready;
+
   //============================================================================
   // FIFO Count Assignments
   //============================================================================
@@ -168,12 +179,31 @@ module uart_top #(
       .rx_fifo_data_i(rx_fifo_data),
       .rx_fifo_data_valid_i(rx_fifo_data_valid),
       .rx_fifo_data_ready_o(rx_fifo_data_ready),
-      .access_id_req_o(),
-      .access_id_req_valid_o(),
-      .access_id_req_ready_i(),
-      .access_id_gnt_i(),
-      .access_id_gnt_valid_i(),
-      .access_id_gnt_ready_o()
+      .access_id_req_o(access_id_req),
+      .access_id_req_valid_o(access_id_req_valid),
+      .access_id_req_ready_i(access_id_req_ready),
+      .access_id_gnt_i(access_id_gnt),
+      .access_id_gnt_valid_i(access_id_gnt_valid),
+      .access_id_gnt_ready_o(access_id_gnt_ready)
+  );
+
+  //============================================================================
+  // Access ID FIFO: Stores access-id requests from the register interface
+  // and provides grants back with valid/ready handshaking.
+  //============================================================================
+
+  fifo #(
+      .ELEM_WIDTH(8),
+      .FIFO_SIZE (4)
+  ) u_access_id_fifo (
+      .clk_i(clk_i),
+      .arst_ni(arst_ni),
+      .elem_in_i(access_id_req),
+      .elem_in_valid_i(access_id_req_valid),
+      .elem_in_ready_o(access_id_req_ready),
+      .elem_out_o(access_id_gnt),
+      .elem_out_valid_o(access_id_gnt_valid),
+      .elem_out_ready_i(access_id_gnt_ready)
   );
 
   //============================================================================
