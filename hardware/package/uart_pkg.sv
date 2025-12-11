@@ -20,6 +20,9 @@ package uart_pkg;
   localparam int REG_TX_FIFO_DATA_ADDR = 6'h14;
   localparam int REG_RX_FIFO_DATA_ADDR = 6'h18;
   localparam int REG_RX_FIFO_PEEK_ADDR = 6'h1C;
+  localparam int REG_ACCESS_ID_REQ = 6'h20;
+  localparam int REG_ACCESS_ID_GNT = 6'h24;
+  localparam int REG_ACCESS_ID_GNT_PEEK = 6'h28;
 
   // Control Register (CTRL) - 0x00
   typedef struct packed {
@@ -31,11 +34,16 @@ package uart_pkg;
 
   // Configuration Register (CONFIG) - 0x04
   typedef struct packed {
-    logic [27:0] Reserved;     // [31:4] Reserved
-    logic        RX_INT_EN;    // [3] RX Interrupt Enable
-    logic        STOP_BITS;    // [2] Stop Bit Configuration
-    logic        PARITY_TYPE;  // [1] Parity Type (0: Even, 1: Odd)
-    logic        PARITY_EN;    // [0] Enable Parity Checking
+    logic [27:0] Reserved;       // [31:9] Reserved
+    logic        TX_FULL;        // [8] TX FIFO full flag
+    logic        TX_NEAR_FULL;   // [7] TX FIFO near full flag
+    logic        RX_FULL;        // [6] RX FIFO full flag
+    logic        RX_NEAR_FULL;   // [5] RX FIFO near full flag
+    logic        RX_VALID;       // [4] RX data valid flag
+    logic        RX_PARITY_ERR;  // [3] RX parity error flag
+    logic        STOP_BITS;      // [2] Stop Bit Configuration
+    logic        PARITY_TYPE;    // [1] Parity Type (0: Even, 1: Odd)
+    logic        PARITY_EN;      // [0] Enable Parity Checking
   } cfg_reg_t;
 
   // Clock Divisor Register (CLK_DIV) - 0x08
@@ -70,6 +78,24 @@ package uart_pkg;
     logic [23:0] Reserved;      // [31:8] Reserved
     logic [7:0]  RX_PEEK_DATA;  // [7:0] Received data byte (non-destructive read)
   } rx_fifo_peek_reg_t;
+
+  // Access ID Request Register (ACCESS_ID_REQ) - 0x20
+  typedef struct packed {
+    logic [23:0] Reserved;   // [31:8] Reserved
+    logic [7:0]  ACCESS_ID;  // [7:0] Access_id
+  } access_id_req_reg_t;
+
+  // Access ID Grant Register (ACCESS_ID_GNT) - 0x24
+  typedef struct packed {
+    logic [23:0] Reserved;   // [31:8] Reserved
+    logic [7:0]  ACCESS_ID;  // [7:0] Access_id
+  } access_id_gnt_reg_t;
+
+  // Access ID Grant Peek Register (ACCESS_ID_GNT_PEEK) - 0x28
+  typedef struct packed {
+    logic [23:0] Reserved;   // [31:8] Reserved
+    logic [7:0]  ACCESS_ID;  // [7:0] Access_id
+  } access_id_gnt_peek_reg_t;
 
   localparam int ID_WIDTH = 2;
   localparam int ADDR_WIDTH = 32;

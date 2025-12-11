@@ -6,6 +6,8 @@ module uart_rx (
     input logic cfg_parity_type_i,
     input logic cfg_stop_bits_i,
 
+    output logic int_parity_err_o,
+
     output logic [7:0] rx_data_o,
     output logic       rx_data_valid_o,
 
@@ -116,8 +118,10 @@ module uart_rx (
       current_state <= IDLE;
       rx_data_o <= '0;
       rx_data_valid_o <= 1'b0;
+      int_parity_err_o <= 1'b0;
     end else begin
       rx_data_valid_o <= 1'b0;
+      int_parity_err_o <= 1'b0;
       if (counter == 3'd4) begin
         current_state <= next_state;
         case (current_state)
@@ -152,6 +156,8 @@ module uart_rx (
             if (cfg_parity_en_i) begin
               if (parity_received == parity_expected) begin
                 rx_data_valid_o <= 1'b1;
+              end else begin
+                int_parity_err_o <= 1'b1;
               end
             end else begin
               rx_data_valid_o <= 1'b1;
