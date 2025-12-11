@@ -22,30 +22,40 @@ static int pos_libc_to_octal(char *buf, uint32_t value, int alt_form, int precis
 static void pos_libc_uc(char *buf);
 static int pos_libc_to_hex(char *buf, uint32_t value, int alt_form, int precision, int prefix);
 
+//  Send NOP OPs 
 void nop_delay(int n) {
     for (int wait = 0; wait < n; wait++) asm volatile("nop");
 }
 
+// Capture hart ID
 uint32_t get_hart_id() {
     uint32_t hart_id;
-    asm volatile ("csrr %0, mhartid" : "=r"(hart_id));
+    asm volatile ("csrr %0, mhartid" : "=r"(hart_id)); // Read from csr
     return hart_id;
 }
 
+// Lock UART with HART ID + 1
 void uart_req_lock() {
     REG_DHS_UART_ACCESS_ID_REQ = (get_hart_id() + 1);
+    // Wait until grant has arrived through peeking.
     while (REG_DHS_UART_ACCESS_ID_GNT_PEEK != (get_hart_id() + 1)) {
         nop_delay(128);
     }
 }
 
+// Release UART lock
 void uart_req_release() {
+    // Wait until TX fifo is empty
     while (REG_DHS_UART_TX_FIFO_STAT > 0) {
         nop_delay(128);
     }
+
+    // Just make sure HART ID is appropriate
     while (REG_DHS_UART_ACCESS_ID_GNT_PEEK != (get_hart_id() + 1)) {
         nop_delay(128);
     }
+
+    // Pop HART ID out of ID queue
     (void)REG_DHS_UART_ACCESS_ID_GNT;  // Read to clear/pop the grant
 }
 
@@ -72,26 +82,18 @@ static void pos_putc(char c)
     pos_libc_putc_stdout(c); // Call function to put character to stdout
 }
 
-int fputc(int c, FILE *stream)
-{
-    uart_req_lock();
-    fputc_internal(c, stream); // Put character to stream
-    uart_req_release();
-    return 0;    // Return success
-}
-
 int fputc_internal(int c, FILE *stream)
 {
     pos_putc(c); // Put character to stream
     return 0;    // Return success
 }
 
-int puts(const char *s) {
-    int r;
+int fputc(int c, FILE *stream)
+{
     uart_req_lock();
-    r = puts_internal(s);
+    fputc_internal(c, stream); // Put character to stream
     uart_req_release();
-    return r;
+    return 0;    // Return success
 }
 
 int puts_internal(const char *s)
@@ -110,6 +112,14 @@ int puts_internal(const char *s)
     } while (1);
 
     return 0; // Return success
+}
+
+int puts(const char *s) {
+    int r;
+    uart_req_lock();
+    r = puts_internal(s);
+    uart_req_release();
+    return r;
 }
 
 int putchar(int c)
