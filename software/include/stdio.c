@@ -22,6 +22,32 @@ static int pos_libc_to_octal(char *buf, uint32_t value, int alt_form, int precis
 static void pos_libc_uc(char *buf);
 static int pos_libc_to_hex(char *buf, uint32_t value, int alt_form, int precision, int prefix);
 
+void nop_delay(int n) {
+    for (int wait = 0; wait < n; wait++) asm volatile("nop");
+}
+
+uint32_t get_hart_id() {
+    uint32_t hart_id;
+    asm volatile ("csrr %0, mhartid" : "=r"(hart_id));
+    return hart_id;
+}
+
+void uart_req_lock() {
+    REG_DHS_UART_ACCESS_ID_REQ = (get_hart_id() + 1);
+    while (REG_DHS_UART_ACCESS_ID_GNT_PEEK != (get_hart_id() + 1)) {
+        nop_delay(128);
+    }
+}
+
+void uart_req_release() {
+    while (REG_DHS_UART_TX_FIFO_STAT > 0) {
+        nop_delay(128);
+    }
+    if (REG_DHS_UART_ACCESS_ID_GNT_PEEK != (get_hart_id() + 1)) {
+        (void)REG_DHS_UART_ACCESS_ID_GNT;  // Read to clear/pop the grant
+    }
+}
+
 // Function definitions
 void *memcpy(void *dest, const void *src, size_t n)
 {
@@ -47,11 +73,27 @@ static void pos_putc(char c)
 
 int fputc(int c, FILE *stream)
 {
+    uart_req_lock();
+    fputc_internal(c, stream); // Put character to stream
+    uart_req_release();
+    return 0;    // Return success
+}
+
+int fputc_internal(int c, FILE *stream)
+{
     pos_putc(c); // Put character to stream
     return 0;    // Return success
 }
 
-int puts(const char *s)
+int puts(const char *s) {
+    int r;
+    uart_req_lock();
+    r = puts_internal(s);
+    uart_req_release();
+    return r;
+}
+
+int puts_internal(const char *s)
 {
     char c;
     do
@@ -71,7 +113,11 @@ int puts(const char *s)
 
 int putchar(int c)
 {
-    return fputc(c, stdout); // Put character to stdout
+    int r;
+    uart_req_lock();
+    r = fputc_internal(c, stdout); // Put character to stdout
+    uart_req_release();
+    return r;
 }
 
 int get_flag(char s, flags_t *f)
@@ -123,7 +169,7 @@ int print_string(va_list l, flags_t *f)
 
     if (!s)
         s = "(null)"; // Handle null string
-    return (puts(s)); // Print string
+    return (puts_internal(s)); // Print string
 }
 
 int print_hex(va_list l, flags_t *f)
@@ -133,8 +179,8 @@ int print_hex(va_list l, flags_t *f)
     int count = 0;
 
     if (f->hash == 1 && str[0] != '0')
-        count += puts("0x"); // Print 0x prefix if hash flag is set
-    count += puts(str);      // Print hex string
+        count += puts_internal("0x"); // Print 0x prefix if hash flag is set
+    count += puts_internal(str);      // Print hex string
     return (count);          // Return character count
 }
 
@@ -145,8 +191,8 @@ int print_hex_big(va_list l, flags_t *f)
     int count = 0;
 
     if (f->hash == 1 && str[0] != '0')
-        count += puts("0X"); // Print 0X prefix if hash flag is set
-    count += puts(str);      // Print hex string
+        count += puts_internal("0X"); // Print 0X prefix if hash flag is set
+    count += puts_internal(str);      // Print hex string
     return (count);          // Return character count
 }
 
@@ -876,8 +922,10 @@ int printf(char *format, ...)
     va_list vargs;
     int r;
     va_start(vargs, format);
+    uart_req_lock();
     r = pos_libc_prf_locked(pos_libc_fputc_locked, ((void *)stdout), format, vargs);
     va_end(vargs);
+    uart_req_release();
     return r;
 }
 
