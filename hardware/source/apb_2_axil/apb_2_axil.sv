@@ -48,11 +48,11 @@ module apb_2_axil #(
       .SyncStages(2)
   ) u_axi_cdc (
       .src_clk_i (apb_clk_i),
-      .src_rst_ni(apb_arst_ni),
+      .src_rst_ni(cst_arst_n),
       .src_req_i (intr_axi_req),
       .src_resp_o(intr_axi_resp),
       .dst_clk_i (axi_clk_i),
-      .dst_rst_ni(axi_arst_ni),
+      .dst_rst_ni(cst_arst_n),
       .dst_req_o (axi_req_o),
       .dst_resp_i(axi_resp_i)
   );
