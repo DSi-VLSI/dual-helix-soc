@@ -8,17 +8,20 @@
 // ============================================================================
 
 module uart_reg_if
-import uart_pkg::REG_CTRL_ADDR;
-import uart_pkg::REG_CFG_ADDR;
-import uart_pkg::REG_CLK_DIV_ADDR;
-import uart_pkg::REG_TX_FIFO_STAT_ADDR;
-import uart_pkg::REG_RX_FIFO_STAT_ADDR;
-import uart_pkg::REG_TX_FIFO_DATA_ADDR;
-import uart_pkg::REG_RX_FIFO_DATA_ADDR;
-import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
-  #(
+  import uart_pkg::REG_CTRL_ADDR;
+  import uart_pkg::REG_CFG_ADDR;
+  import uart_pkg::REG_CLK_DIV_ADDR;
+  import uart_pkg::REG_TX_FIFO_STAT_ADDR;
+  import uart_pkg::REG_RX_FIFO_STAT_ADDR;
+  import uart_pkg::REG_TX_FIFO_DATA_ADDR;
+  import uart_pkg::REG_RX_FIFO_DATA_ADDR;
+  import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
+  import uart_pkg::REG_ACCESS_ID_REQ_ADDR;
+  import uart_pkg::REG_ACCESS_ID_GNT_ADDR;
+  import uart_pkg::REG_ACCESS_ID_GNT_PEEK_ADDR;
+#(
     localparam int ADDR_WIDTH = 6,  // Address bus width (supports up to 64 byte address space)
-    localparam int DATA_WIDTH = 32 // Data bus width
+    localparam int DATA_WIDTH = 32  // Data bus width
 ) (
     // ========================================================================
     // Global Signals
@@ -53,10 +56,15 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
     // ========================================================================
     // Configuration Register (0x04) Outputs
     // ========================================================================
-    output logic cfg_parity_en_o,    // Enable parity checking
-    output logic cfg_parity_type_o,  // Parity type (0: Even, 1: Odd)
-    output logic cfg_stop_bits_o,    // Stop bits (0: 1 bit, 1: 2 bits)
-    output logic cfg_rx_int_en_o,    // RX interrupt enable
+    output logic cfg_parity_en_o,         // Enable parity checking
+    output logic cfg_parity_type_o,       // Parity type (0: Even, 1: Odd)
+    output logic cfg_stop_bits_o,         // Stop bits (0: 1 bit, 1: 2 bits)
+    output logic cfg_rx_parity_err_en_o,  // RX interrupt enable
+    output logic cfg_rx_valid_en_o,       // RX interrupt enable
+    output logic cfg_rx_near_full_en_o,   // RX interrupt enable
+    output logic cfg_rx_full_en_o,        // RX interrupt enable
+    output logic cfg_tx_near_full_en_o,   // RX interrupt enable
+    output logic cfg_tx_full_en_o,        // RX interrupt enable
 
     // ========================================================================
     // Clock Divisor Register (0x08) Output
@@ -81,11 +89,26 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
     input  logic       tx_fifo_data_ready_i,  // FIFO ready to accept data
 
     // ========================================================================
-    // RX FIFO Data Register (0x20) Interface
+    // RX FIFO Data Register (0x18) Interface
     // ========================================================================
     input  logic [7:0] rx_fifo_data_i,        // Received data from FIFO
     input  logic       rx_fifo_data_valid_i,  // Data valid from FIFO
-    output logic       rx_fifo_data_ready_o   // Ready to read data (pop from FIFO)
+    output logic       rx_fifo_data_ready_o,  // Ready to read data (pop from FIFO)
+
+    // ========================================================================
+    // Access ID Request Register (0x20) Interface
+    // ========================================================================
+    output logic [7:0] access_id_req_o,        // Access ID request value
+    output logic       access_id_req_valid_o,  // Request valid (write strobe)
+    input  logic       access_id_req_ready_i,  // Request ready (FIFO has space)
+
+    // ========================================================================
+    // Access ID Grant Register (0x24) Interface
+    // ========================================================================
+    input  logic [7:0] access_id_gnt_i,        // Access ID grant value from UART
+    input  logic       access_id_gnt_valid_i,  // Grant valid (data available)
+    output logic       access_id_gnt_ready_o   // Grant ready (pop from FIFO)
+
 );
 
   // ==========================================================================
@@ -99,6 +122,9 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
     mem_wresp_o = 2'b10;  // Default: SLVERR (slave error)
     tx_fifo_data_o = mem_wdata_i[7:0];
     tx_fifo_data_valid_o = 1'b0;
+    access_id_req_o = mem_wdata_i[7:0];
+    access_id_req_valid_o = 1'b0;
+
     if (mem_we_i) begin
       case (mem_waddr_i)
 
@@ -131,6 +157,15 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
           end
         end
 
+        REG_ACCESS_ID_REQ_ADDR: begin
+          // Access ID request register: write enqueues an access-id request
+          // to the UART-side handler when the downstream interface is ready.
+          if (access_id_req_ready_i) begin
+            mem_wresp_o = 2'b00;
+            access_id_req_valid_o = 1'b1;
+          end
+        end
+
       endcase
     end
   end
@@ -145,6 +180,8 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
   always_comb begin : read_logic
     mem_rresp_o = 2'b10;  // Default: SLVERR (slave error)
     rx_fifo_data_ready_o = 1'b0;
+    access_id_gnt_ready_o = 1'b0;
+    mem_rdata_o = '0;
     if (mem_re_i) begin
       case (mem_raddr_i)
 
@@ -154,10 +191,23 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
           mem_rdata_o = {'0, rx_fifo_flush_o, tx_fifo_flush_o, ctrl_clk_en_o};
         end
 
+
+
         REG_CFG_ADDR: begin
           // Read configuration register
           mem_rresp_o = 2'b00;  // OKAY
-          mem_rdata_o = {'0, cfg_rx_int_en_o, cfg_stop_bits_o, cfg_parity_type_o, cfg_parity_en_o};
+          mem_rdata_o = {
+            '0,
+            cfg_tx_full_en_o,
+            cfg_tx_near_full_en_o,
+            cfg_rx_full_en_o,
+            cfg_rx_near_full_en_o,
+            cfg_rx_valid_en_o,
+            cfg_rx_parity_err_en_o,
+            cfg_stop_bits_o,
+            cfg_parity_type_o,
+            cfg_parity_en_o
+          };
         end
 
         REG_CLK_DIV_ADDR: begin
@@ -195,6 +245,25 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
           end
         end
 
+        REG_ACCESS_ID_GNT_ADDR: begin
+          // Read Access ID grant (destructive): return the granted ID
+          // when available and assert ready to consume the grant entry.
+          if (access_id_gnt_valid_i) begin
+            mem_rresp_o = 2'b00;
+            access_id_gnt_ready_o = 1'b1;
+            mem_rdata_o = {'0, access_id_gnt_i};
+          end
+        end
+
+        REG_ACCESS_ID_GNT_PEEK_ADDR: begin
+          // Peek Access ID grant (non-destructive): return the next
+          // grant value without consuming it (no ready asserted).
+          if (access_id_gnt_valid_i) begin
+            mem_rresp_o = 2'b00;
+            mem_rdata_o = {'0, access_id_gnt_i};
+          end
+        end
+
       endcase
     end
   end
@@ -208,14 +277,19 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
   always_ff @(posedge clk_i or negedge arst_ni) begin
     if (~arst_ni) begin
       // Reset all registers to default values
-      ctrl_clk_en_o     <= '0;
-      tx_fifo_flush_o   <= '0;
-      rx_fifo_flush_o   <= '0;
-      cfg_parity_en_o   <= '0;
-      cfg_parity_type_o <= '0;
-      cfg_stop_bits_o   <= '0;
-      cfg_rx_int_en_o   <= '0;
-      clk_div_o         <= 'h28B1;
+      ctrl_clk_en_o          <= '0;
+      tx_fifo_flush_o        <= '0;
+      rx_fifo_flush_o        <= '0;
+      cfg_parity_en_o        <= '0;
+      cfg_parity_type_o      <= '0;
+      cfg_stop_bits_o        <= '0;
+      cfg_rx_parity_err_en_o <= '0;
+      cfg_rx_valid_en_o      <= '0;
+      cfg_rx_near_full_en_o  <= '0;
+      cfg_rx_full_en_o       <= '0;
+      cfg_tx_near_full_en_o  <= '0;
+      cfg_tx_full_en_o       <= '0;
+      clk_div_o              <= 'h28B1;
     end else begin
       // Update registers on successful write (OKAY response)
       if (mem_wresp_o == 0) begin
@@ -230,10 +304,15 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
 
           REG_CFG_ADDR: begin
             // Update configuration register fields
-            cfg_parity_en_o   <= mem_wdata_i[0];  // Bit 0: Parity enable
+            cfg_parity_en_o <= mem_wdata_i[0];  // Bit 0: Parity enable
             cfg_parity_type_o <= mem_wdata_i[1];  // Bit 1: Parity type
-            cfg_stop_bits_o   <= mem_wdata_i[2];  // Bit 2: Stop bits
-            cfg_rx_int_en_o   <= mem_wdata_i[3];  // Bit 3: RX interrupt enable
+            cfg_stop_bits_o <= mem_wdata_i[2];  // Bit 2: Stop bits
+            cfg_rx_parity_err_en_o <= mem_wdata_i[3];  // Bit 3: RX parity error flag (CONFIG)
+            cfg_rx_valid_en_o <= mem_wdata_i[4];  // Bit 4: RX data valid flag (CONFIG)
+            cfg_rx_near_full_en_o <= mem_wdata_i[5];  // Bit 5: RX near-full threshold flag (CONFIG)
+            cfg_rx_full_en_o <= mem_wdata_i[6];  // Bit 6: RX FIFO full flag (CONFIG)
+            cfg_tx_near_full_en_o <= mem_wdata_i[7];  // Bit 7: TX near-full threshold flag (CONFIG)
+            cfg_tx_full_en_o <= mem_wdata_i[8];  // Bit 8: TX FIFO full flag (CONFIG)
           end
 
           REG_CLK_DIV_ADDR: begin
@@ -244,6 +323,11 @@ import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
           REG_TX_FIFO_DATA_ADDR: begin
             // TX FIFO data write - no register state to update
             // Data is pushed to FIFO via tx_fifo_data_o and tx_fifo_data_valid_o
+          end
+
+          REG_ACCESS_ID_REQ_ADDR: begin
+            // Access ID write - no register state to update
+            // Data is pushed to FIFO via access_id_req_o and access_id_req_valid_o
           end
 
         endcase

@@ -53,7 +53,8 @@ export SOC_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/SoC
 
 BUILD_DIR                 := $(DUAL_HELIX_SOC_DIR)/build
 LOG_DIR                   := $(DUAL_HELIX_SOC_DIR)/log
-FILE_LISTS                := $(shell find $(DUAL_HELIX_SOC_DIR)/hardware/filelist -type f -name "*.f")
+FILE_LISTS                := $(shell find $(DUAL_HELIX_SOC_DIR)/hardware/filelist -type f -name "pkg.f")
+FILE_LISTS                += $(shell find $(DUAL_HELIX_SOC_DIR)/hardware/filelist -type f -name "*.f" ! -name "pkg.f")
 
 ####################################################################################################
 # Rules

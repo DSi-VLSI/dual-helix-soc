@@ -6,10 +6,10 @@
 //   for crossing clock domains between the system clock and UART baud clock.
 //******************************************************************************
 module uart_top #(
-    parameter type req_t  = uart_pkg::axil_req_t,  // AXI request type
-    parameter type resp_t = uart_pkg::axil_resp_t, // AXI response type
-    parameter int MEM_BASE   = 0,  // Base address for UART registers
-    parameter int MEM_SIZE   = 6,  // Register address width (64 byte address space)
+    parameter type req_t = uart_pkg::uart_axil_req_t,  // AXI request type
+    parameter type resp_t = uart_pkg::uart_axil_resp_t,  // AXI response type
+    parameter int MEM_BASE = 0,  // Base address for UART registers
+    parameter int MEM_SIZE = 6,  // Register address width (64 byte address space)
     parameter int DATA_WIDTH = 32  // Data bus width
 ) (
     // System interface
@@ -19,9 +19,9 @@ module uart_top #(
     output resp_t resp_o,   // Bus response (AXI or APB)
 
     // UART interface
-    output logic tx_o,  // UART transmit output
-    input  logic rx_i,  // UART receive input
-    output logic irq_o  // Interrupt output (RX data ready)
+    output logic       tx_o,  // UART transmit output
+    input  logic       rx_i,  // UART receive input
+    output logic [7:0] irq_o  // Interrupt output (RX data ready)
 );
 
   //----------------------------------------------------------------------------
@@ -54,7 +54,14 @@ module uart_top #(
   logic                    cfg_parity_en;  // Parity enable configuration
   logic                    cfg_parity_type;  // Parity type (0=even, 1=odd)
   logic                    cfg_stop_bits;  // Stop bits configuration (0=1 bit, 1=2 bits)
-  logic                    cfg_rx_int_en;  // RX interrupt enable
+  logic                    cfg_rx_parity_err_en_o;
+  logic                    cfg_rx_valid_en_o;
+  logic                    cfg_rx_near_full_en_o;
+  logic                    cfg_rx_full_en_o;
+  logic                    cfg_tx_near_full_en_o;
+  logic                    cfg_tx_full_en_o;
+
+  logic                    int_parity_err_o;
 
   logic [  DATA_WIDTH-1:0] clk_div;  // Clock divider value for baud rate
   logic [  DATA_WIDTH-1:0] tx_fifo_count;  // TX FIFO occupancy count
@@ -92,6 +99,17 @@ module uart_top #(
   //----------------------------------------------------------------------------
   logic [TX_FIFO_SIZE-1:0] tx_fifo_count_temp;
   logic [RX_FIFO_SIZE-1:0] rx_fifo_count_temp;
+
+  //----------------------------------------------------------------------------
+  // Access ID FIFO signals
+  //----------------------------------------------------------------------------
+
+  logic [             7:0] access_id_req;
+  logic                    access_id_req_valid;
+  logic                    access_id_req_ready;
+  logic [             7:0] access_id_gnt;
+  logic                    access_id_gnt_valid;
+  logic                    access_id_gnt_ready;
 
   //============================================================================
   // FIFO Count Assignments
@@ -146,7 +164,12 @@ module uart_top #(
       .cfg_parity_en_o(cfg_parity_en),
       .cfg_parity_type_o(cfg_parity_type),
       .cfg_stop_bits_o(cfg_stop_bits),
-      .cfg_rx_int_en_o(cfg_rx_int_en),
+      .cfg_rx_parity_err_en_o(cfg_rx_parity_err_en_o),
+      .cfg_rx_valid_en_o(cfg_rx_valid_en_o),
+      .cfg_rx_near_full_en_o(cfg_rx_near_full_en_o),
+      .cfg_rx_full_en_o(cfg_rx_full_en_o),
+      .cfg_tx_near_full_en_o(cfg_tx_near_full_en_o),
+      .cfg_tx_full_en_o(cfg_tx_full_en_o),
       .clk_div_o(clk_div),
       .tx_fifo_count_i(tx_fifo_count),
       .rx_fifo_count_i(rx_fifo_count),
@@ -155,7 +178,32 @@ module uart_top #(
       .tx_fifo_data_ready_i(tx_fifo_data_ready),
       .rx_fifo_data_i(rx_fifo_data),
       .rx_fifo_data_valid_i(rx_fifo_data_valid),
-      .rx_fifo_data_ready_o(rx_fifo_data_ready)
+      .rx_fifo_data_ready_o(rx_fifo_data_ready),
+      .access_id_req_o(access_id_req),
+      .access_id_req_valid_o(access_id_req_valid),
+      .access_id_req_ready_i(access_id_req_ready),
+      .access_id_gnt_i(access_id_gnt),
+      .access_id_gnt_valid_i(access_id_gnt_valid),
+      .access_id_gnt_ready_o(access_id_gnt_ready)
+  );
+
+  //============================================================================
+  // Access ID FIFO: Stores access-id requests from the register interface
+  // and provides grants back with valid/ready handshaking.
+  //============================================================================
+
+  fifo #(
+      .ELEM_WIDTH(8),
+      .FIFO_SIZE (4)
+  ) u_access_id_fifo (
+      .clk_i(clk_i),
+      .arst_ni(arst_ni),
+      .elem_in_i(access_id_req),
+      .elem_in_valid_i(access_id_req_valid),
+      .elem_in_ready_o(access_id_req_ready),
+      .elem_out_o(access_id_gnt),
+      .elem_out_valid_o(access_id_gnt_valid),
+      .elem_out_ready_i(access_id_gnt_ready)
   );
 
   //============================================================================
@@ -230,7 +278,13 @@ module uart_top #(
   // Interrupt Generation
   // Generate interrupt when RX data is available and interrupt is enabled
   //============================================================================
-  assign irq_o = cfg_rx_int_en & rx_fifo_data_valid;
+
+  assign irq_o[5] = cfg_rx_parity_err_en_o && int_parity_err_o;
+  assign irq_o[4] = cfg_rx_valid_en_o && rx_fifo_data_valid;
+  assign irq_o[3] = cfg_rx_near_full_en_o && (rx_fifo_count_temp > (RX_FIFO_SIZE / 2));
+  assign irq_o[2] = cfg_rx_full_en_o && (rx_fifo_count_temp == RX_FIFO_SIZE);
+  assign irq_o[1] = cfg_tx_near_full_en_o && (tx_fifo_count_temp > (TX_FIFO_SIZE / 2));
+  assign irq_o[0] = cfg_tx_full_en_o && (tx_fifo_count_temp == TX_FIFO_SIZE);
 
   //============================================================================
   // UART Transmitter
@@ -258,6 +312,7 @@ module uart_top #(
       .cfg_parity_en_i(cfg_parity_en),
       .cfg_parity_type_i(cfg_parity_type),
       .cfg_stop_bits_i(cfg_stop_bits),
+      .int_parity_err_o(int_parity_err_o),
       .rx_data_o(rx_data),
       .rx_data_valid_o(rx_data_valid),
       .rx_i(rx_i)

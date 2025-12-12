@@ -1,8 +1,8 @@
 `include "axi/typedef.svh"
 
 module axil_to_simple_if #(
-    parameter type         req_t    = uart_pkg::axil_req_t,
-    parameter type         resp_t   = uart_pkg::axil_resp_t,
+    parameter type         req_t    = uart_pkg::uart_axil_req_t,
+    parameter type         resp_t   = uart_pkg::uart_axil_resp_t,
     parameter logic [63:0] MEM_BASE = '0,
     parameter int          MEM_SIZE = 32
 ) (

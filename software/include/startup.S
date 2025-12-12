@@ -4,10 +4,6 @@
 .globl tohost
 tohost: .dword 0
 
-.align 2
-.globl putchar_stdout
-putchar_stdout: .dword 0
-
 .section .text
 .globl _start
 _start:
