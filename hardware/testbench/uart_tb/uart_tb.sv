@@ -416,11 +416,11 @@ module uart_tb;
     end
 
     // ACCESS ID testing
-    // verilog_format: off
-    // verilog_lint: waive-start
     begin
 
       // Send Access Request
+
+      static semaphore access_peek_lock = new(1);
 
       access_id_req_reg = '0;
 
@@ -430,6 +430,7 @@ module uart_tb;
       access_id_req_reg.ACCESS_ID = 'h2;
       send_write(ACCESS_ID_REQ_ADDR, access_id_req_reg);
 
+      // verilog_format: off
       fork  // Check the peek status;
 
         begin  // core 1
@@ -439,7 +440,9 @@ module uart_tb;
           `HIGHLIGHT_MSG($sformatf("[%s][%0d][%0t] Core 1 Requesting Access", `__FILE__, `__LINE__, $realtime))
           while (1) begin
             `HIGHLIGHT_MSG($sformatf("[%s][%0d][%0t] Core 1 Peeking Access", `__FILE__, `__LINE__, $realtime))
+            access_peek_lock.get(1);
             send_read_peek(ACCESS_ID_GNT_PEEK_ADDR, core_id);
+            access_peek_lock.put(1);
             if (core_id == 1) begin
               break;
             end else begin
@@ -462,7 +465,9 @@ module uart_tb;
           `HIGHLIGHT_MSG($sformatf("[%s][%0d][%0t] Core 2 Requesting Access", `__FILE__, `__LINE__, $realtime))
           while (1) begin
             `HIGHLIGHT_MSG($sformatf("[%s][%0d][%0t] Core 2 Peeking Access", `__FILE__, `__LINE__, $realtime))
+            access_peek_lock.get(1);
             send_read_peek(ACCESS_ID_GNT_PEEK_ADDR, core_id);
+            access_peek_lock.put(1);
             if (core_id == 2) begin
               break;
             end else begin
@@ -479,10 +484,9 @@ module uart_tb;
         end
 
       join
+    // verilog_format: on
 
     end
-    // verilog_lint: waive-stop
-    // verilog_format: on
 
     $display("tx_fifo_full: 0b%b", irq[0]);
 
@@ -500,7 +504,8 @@ module uart_tb;
       `HIGHLIGHT_MSG("TX DATA FIFO FULL")
     end
 
-    repeat (10000) @(posedge clk);
+    #15ms;
+    // repeat (10000) @(posedge clk);
     `HIGHLIGHT_MSG("TEST COMPLETE")
     $finish;
   end
