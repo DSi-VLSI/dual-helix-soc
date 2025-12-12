@@ -61,7 +61,6 @@ module obi_2_axi_core_tb;
   );
 
   // MACROS AND AUTOMATA
-  `START_CLK(clk_i, OBI_CLK_SPEED)
 
   // TASKS AND FUNCTIONS
   task automatic apply_global_reset();
@@ -177,6 +176,8 @@ module obi_2_axi_core_tb;
     local_data_reg = 32'h45;
 
     apply_global_reset();
+    `START_CLK(clk_i, OBI_CLK_SPEED)
+
     `HIGHLIGHT_MSG("Reset applied. test started")
     #10ns;
     send_request(32'hab, '0, '0, '0);
