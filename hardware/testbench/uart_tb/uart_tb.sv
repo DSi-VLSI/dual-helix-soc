@@ -478,7 +478,7 @@ module uart_tb;
 
           `HIGHLIGHT_MSG($sformatf("[%s][%0d][%0t] Core 2 has access", `__FILE__, `__LINE__, $realtime))
           do @(posedge clk); while (irq[0]);
-          send_write(TX_FIFO_DATA_ADDR, 'hAB);
+          send_write(TX_FIFO_DATA_ADDR, 'hCD);
           send_read(ACCESS_ID_GNT_ADDR);
           `HIGHLIGHT_MSG($sformatf("[%s][%0d][%0t] Core 2 Access Release", `__FILE__, `__LINE__, $realtime))
         end
