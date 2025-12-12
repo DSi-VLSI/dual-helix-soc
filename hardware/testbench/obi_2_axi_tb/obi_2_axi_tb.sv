@@ -100,8 +100,7 @@ module obi_2_axi_tb;
   );
 
   // MACROS AND AUTOMATA
-  `START_CLK(clk_obi_i, OBI_CLK_SPEED)
-  `START_CLK(clk_axi_i, AXI_CLK_SPEED)
+
 
   // TASKS AND FUNCTIONS
   task automatic apply_global_reset();
@@ -277,6 +276,8 @@ module obi_2_axi_tb;
       end
       begin
         apply_global_reset();
+        `START_CLK(clk_obi_i, OBI_CLK_SPEED)
+        `START_CLK(clk_axi_i, AXI_CLK_SPEED)
         #10ns;
         send_request(32'hAB, '0, 32'hBC, '1);
         #10ns;

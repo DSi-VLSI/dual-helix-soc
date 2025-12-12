@@ -20,9 +20,9 @@ package uart_pkg;
   localparam int REG_TX_FIFO_DATA_ADDR = 6'h14;
   localparam int REG_RX_FIFO_DATA_ADDR = 6'h18;
   localparam int REG_RX_FIFO_PEEK_ADDR = 6'h1C;
-  localparam int REG_ACCESS_ID_REQ = 6'h20;
-  localparam int REG_ACCESS_ID_GNT = 6'h24;
-  localparam int REG_ACCESS_ID_GNT_PEEK = 6'h28;
+  localparam int REG_ACCESS_ID_REQ_ADDR = 6'h20;
+  localparam int REG_ACCESS_ID_GNT_ADDR = 6'h24;
+  localparam int REG_ACCESS_ID_GNT_PEEK_ADDR = 6'h28;
 
   // Control Register (CTRL) - 0x00
   typedef struct packed {
@@ -35,12 +35,12 @@ package uart_pkg;
   // Configuration Register (CONFIG) - 0x04
   typedef struct packed {
     logic [27:0] Reserved;       // [31:9] Reserved
-    logic        TX_FULL;        // [8] TX FIFO full flag
-    logic        TX_NEAR_FULL;   // [7] TX FIFO near full flag
-    logic        RX_FULL;        // [6] RX FIFO full flag
-    logic        RX_NEAR_FULL;   // [5] RX FIFO near full flag
-    logic        RX_VALID;       // [4] RX data valid flag
-    logic        RX_PARITY_ERR;  // [3] RX parity error flag
+    logic        TX_FULL_EN;        // [8] TX FIFO full flag
+    logic        TX_NEAR_FULL_EN;   // [7] TX FIFO near full flag
+    logic        RX_FULL_EN;        // [6] RX FIFO full flag
+    logic        RX_NEAR_FULL_EN;   // [5] RX FIFO near full flag
+    logic        RX_VALID_EN;       // [4] RX data valid flag
+    logic        RX_PARITY_ERR_EN;  // [3] RX parity error flag
     logic        STOP_BITS;      // [2] Stop Bit Configuration
     logic        PARITY_TYPE;    // [1] Parity Type (0: Even, 1: Odd)
     logic        PARITY_EN;      // [0] Enable Parity Checking
@@ -109,10 +109,10 @@ package uart_pkg;
   typedef logic [USER_WIDTH-1:0] user_t;
 
   // AXI Interface Type
-  `AXI_TYPEDEF_ALL(axi, addr_t, id_t, data_t, strb_t, user_t)
+  `AXI_TYPEDEF_ALL(uart_axi, addr_t, id_t, data_t, strb_t, user_t)
 
   // APB Interface Type
-  `AXI_LITE_TYPEDEF_ALL(axil, addr_t, data_t, strb_t)
+  `AXI_LITE_TYPEDEF_ALL(uart_axil, addr_t, data_t, strb_t)
 
   localparam int TX_FIFO_SIZE = 8;
   localparam int RX_FIFO_SIZE = 8;

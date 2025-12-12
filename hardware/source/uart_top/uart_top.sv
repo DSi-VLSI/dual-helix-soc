@@ -6,8 +6,8 @@
 //   for crossing clock domains between the system clock and UART baud clock.
 //******************************************************************************
 module uart_top #(
-    parameter type req_t = uart_pkg::axil_req_t,  // AXI request type
-    parameter type resp_t = uart_pkg::axil_resp_t,  // AXI response type
+    parameter type req_t = uart_pkg::uart_axil_req_t,  // AXI request type
+    parameter type resp_t = uart_pkg::uart_axil_resp_t,  // AXI response type
     parameter int MEM_BASE = 0,  // Base address for UART registers
     parameter int MEM_SIZE = 6,  // Register address width (64 byte address space)
     parameter int DATA_WIDTH = 32  // Data bus width
@@ -281,9 +281,9 @@ module uart_top #(
 
   assign irq_o[5] = cfg_rx_parity_err_en_o && int_parity_err_o;
   assign irq_o[4] = cfg_rx_valid_en_o && rx_fifo_data_valid;
-  assign irq_o[3] = cfg_rx_near_full_en_o && (rx_fifo_count_temp == (RX_FIFO_SIZE / 2));
+  assign irq_o[3] = cfg_rx_near_full_en_o && (rx_fifo_count_temp > (RX_FIFO_SIZE / 2));
   assign irq_o[2] = cfg_rx_full_en_o && (rx_fifo_count_temp == RX_FIFO_SIZE);
-  assign irq_o[1] = cfg_tx_near_full_en_o && (tx_fifo_count_temp == (TX_FIFO_SIZE / 2));
+  assign irq_o[1] = cfg_tx_near_full_en_o && (tx_fifo_count_temp > (TX_FIFO_SIZE / 2));
   assign irq_o[0] = cfg_tx_full_en_o && (tx_fifo_count_temp == TX_FIFO_SIZE);
 
   //============================================================================

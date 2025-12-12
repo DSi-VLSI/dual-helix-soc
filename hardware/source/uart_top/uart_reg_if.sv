@@ -16,9 +16,9 @@ module uart_reg_if
   import uart_pkg::REG_TX_FIFO_DATA_ADDR;
   import uart_pkg::REG_RX_FIFO_DATA_ADDR;
   import uart_pkg::REG_RX_FIFO_PEEK_ADDR;
-  import uart_pkg::REG_ACCESS_ID_REQ;
-  import uart_pkg::REG_ACCESS_ID_GNT;
-  import uart_pkg::REG_ACCESS_ID_GNT_PEEK;
+  import uart_pkg::REG_ACCESS_ID_REQ_ADDR;
+  import uart_pkg::REG_ACCESS_ID_GNT_ADDR;
+  import uart_pkg::REG_ACCESS_ID_GNT_PEEK_ADDR;
 #(
     localparam int ADDR_WIDTH = 6,  // Address bus width (supports up to 64 byte address space)
     localparam int DATA_WIDTH = 32  // Data bus width
@@ -157,7 +157,7 @@ module uart_reg_if
           end
         end
 
-        REG_ACCESS_ID_REQ: begin
+        REG_ACCESS_ID_REQ_ADDR: begin
           // Access ID request register: write enqueues an access-id request
           // to the UART-side handler when the downstream interface is ready.
           if (access_id_req_ready_i) begin
@@ -245,7 +245,7 @@ module uart_reg_if
           end
         end
 
-        REG_ACCESS_ID_GNT: begin
+        REG_ACCESS_ID_GNT_ADDR: begin
           // Read Access ID grant (destructive): return the granted ID
           // when available and assert ready to consume the grant entry.
           if (access_id_gnt_valid_i) begin
@@ -255,7 +255,7 @@ module uart_reg_if
           end
         end
 
-        REG_ACCESS_ID_GNT_PEEK: begin
+        REG_ACCESS_ID_GNT_PEEK_ADDR: begin
           // Peek Access ID grant (non-destructive): return the next
           // grant value without consuming it (no ready asserted).
           if (access_id_gnt_valid_i) begin
@@ -325,7 +325,7 @@ module uart_reg_if
             // Data is pushed to FIFO via tx_fifo_data_o and tx_fifo_data_valid_o
           end
 
-          REG_ACCESS_ID_REQ: begin
+          REG_ACCESS_ID_REQ_ADDR: begin
             // Access ID write - no register state to update
             // Data is pushed to FIFO via access_id_req_o and access_id_req_valid_o
           end
