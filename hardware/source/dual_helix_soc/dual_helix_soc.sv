@@ -467,15 +467,39 @@ module dual_helix_soc
   assign ext_ram_axi_req_o = sysl_slv_device_axi_req[1];
   assign sysl_slv_device_axi_resp[1] = ext_ram_axi_resp_i;
 
+  // TODO RAM PHY
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// DMA
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   // TODO: DMA instance
   //sysl_slv_device_axi_req[2]
-  assign sysl_slv_device_axi_resp[2] = '0;
-  assign sysl_mstr_device_axi_req[1] = '0;
+  //   assign sysl_slv_device_axi_resp[2] = '0;
+  //   assign sysl_mstr_device_axi_req[1] = '0;
   //sysl_mstr_device_axi_resp[1]
+
+  // TODO REPLACE STUB
+
+  axi_master_stub #(
+      .req_t (dhs_sl_sp_axi_req_t),
+      .resp_t(dhs_sl_sp_axi_resp_t)
+  ) dma_mstr_device_stub (
+      .clk_i  (sysl_clk_i),
+      .arst_ni(sysl_arst_ni),
+      .req_o  (sysl_mstr_device_axi_req[1]),
+      .resp_i (sysl_mstr_device_axi_resp[1])
+  );
+
+  axi_slave_stub #(
+      .req_t (dhs_sl_mp_axi_req_t),
+      .resp_t(dhs_sl_mp_axi_resp_t)
+  ) dma_slv_device_stub (
+      .clk_i  (sysl_clk_i),
+      .arst_ni(sysl_arst_ni),
+      .req_i  (sysl_slv_device_axi_req[2]),
+      .resp_o (sysl_slv_device_axi_resp[2])
+  );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// System Link
@@ -692,8 +716,18 @@ module dual_helix_soc
   //// SPI Master Interface
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
+  // TODO replace stub please lmao
+  axil_slave_stub #(
+      .req_t (dhs_axil_req_t),
+      .resp_t(dhs_axil_resp_t)
+  ) spim_slv_device_stub (
+      .clk_i  (periphl_clk_i),
+      .arst_ni(periphl_arst_ni),
+      .req_i  (periphl_slv_device_axil_req[1]),
+      .resp_o (periphl_slv_device_axil_resp[1])
+  );
   // periphl_slv_device_axil_req[1]
-  assign periphl_slv_device_axil_resp[1] = '0;
+  //   assign periphl_slv_device_axil_resp[1] = '0;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// UART Interface
@@ -720,15 +754,35 @@ module dual_helix_soc
   //// CLINT - Core Local Interruptor
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
+  // TODO replace stub please lmao
+  axil_slave_stub #(
+      .req_t (dhs_axil_req_t),
+      .resp_t(dhs_axil_resp_t)
+  ) clint_slv_device_stub (
+      .clk_i  (periphl_clk_i),
+      .arst_ni(periphl_arst_ni),
+      .req_i  (periphl_slv_device_axil_req[3]),
+      .resp_o (periphl_slv_device_axil_resp[3])
+  );
   // periphl_slv_device_axil_req[3]
-  assign periphl_slv_device_axil_resp[3] = '0;
+  //   assign periphl_slv_device_axil_resp[3] = '0;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// PLIC - Platform Level Interrupt Controller
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
+  // TODO replace stub please lmao
+  axil_slave_stub #(
+      .req_t (dhs_axil_req_t),
+      .resp_t(dhs_axil_resp_t)
+  ) plic_slv_device_stub (
+      .clk_i  (periphl_clk_i),
+      .arst_ni(periphl_arst_ni),
+      .req_i  (periphl_slv_device_axil_req[4]),
+      .resp_o (periphl_slv_device_axil_resp[4])
+  );
   // periphl_slv_device_axil_req[4]
-  assign periphl_slv_device_axil_resp[4] = '0;
+//   assign periphl_slv_device_axil_resp[4] = '0;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// Timers
