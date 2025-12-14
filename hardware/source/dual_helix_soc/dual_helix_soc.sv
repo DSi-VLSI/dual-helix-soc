@@ -56,6 +56,10 @@ module dual_helix_soc
   import dual_helix_pkg::SystemLinkConfig;
   import dual_helix_pkg::SystemLinkRule;
   import dual_helix_pkg::UART_BASE;
+  import dual_helix_pkg::SOC_CTRL_BASE;
+
+  import soc_ctrl_pkg::REF_DIV_BW;
+  import soc_ctrl_pkg::FB_DIV_BW;
 (
     input logic core1_clk_i,   // TODO -  internal pll
     input logic core2_clk_i,   // TODO -  internal pll
@@ -685,8 +689,44 @@ module dual_helix_soc
   //// System Controller
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // periphl_slv_device_axil_req[0]
-  assign periphl_slv_device_axil_resp[0] = '0;
+  soc_ctrl_top #(
+      .req_t  (dhs_axil_req_t),
+      .resp_t (dhs_axil_resp_t),
+      .MEM_BASE   (SOC_CTRL_BASE),
+      .MEM_SIZE   (DHS_ADDRW),
+      .ADDR_WIDTH (DHS_ADDRW),
+      .DATA_WIDTH (DHS_DATAW),
+      .REF_DIV_BW (REF_DIV_BW),
+      .FB_DIV_BW  (FB_DIV_BW)
+  ) u_soc_ctrl (
+      .clk_i                  (),
+      .arst_ni                (),
+      .axil_req_i             (periphl_slv_device_axil_req[0]),
+      .axil_resp_o            (periphl_slv_device_axil_resp[0]),
+      .boot_mode_i            (),
+      .core_0_clk_o           (),
+      .core_1_clk_o           (),
+      .sys_link_clk_o         (),
+      .gpr0_o                 (),
+      .gpr1_o                 (),
+      .core_0_boot_addr_o     (),
+      .core_1_boot_addr_o     (),
+      .core_0_hart_id_o       (),
+      .core_1_hart_id_o       (),
+      .core_0_mtvec_o         (),
+      .core_1_mtvec_o         (),
+      .core_0_arst_n_o        (),
+      .core_0_clk_en_o        (),
+      .core_1_arst_n_o        (),
+      .core_1_clk_en_o        (),
+      .core_link_arst_n_o     (),
+      .core_link_clk_en_o     (),
+      .core_link_clk_mux_sel_o(),
+      .sys_link_arst_n_o      (),
+      .sys_link_clk_en_o      (),
+      .periph_link_arst_n_o   (),
+      .periph_link_clk_en_o   ()
+  );
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //// SPI Master Interface

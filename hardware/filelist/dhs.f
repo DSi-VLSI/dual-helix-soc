@@ -12,6 +12,9 @@ ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_rx.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_top.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_tx.sv
 
+${DUAL_HELIX_SOC_DIR}/hardware/source/soc_ctrl/soc_ctrl_reg_if.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/soc_ctrl/soc_ctrl_top.sv
+
 ${DUAL_HELIX_SOC_DIR}/hardware/source/obi_2_axi/obi_2_axi_core.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/obi_2_axi/obi_2_axi.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/apb_2_axil/apb_2_axil.sv
