@@ -1,6 +1,9 @@
-module soc_ctrl_top #(
-    parameter type req_t = dual_helix_pkg::dhs_axil_req_t,
-    parameter type resp_t = dual_helix_pkg::dhs_axil_resp_t,
+module soc_ctrl_top
+  import dual_helix_pkg::dhs_axil_req_t;
+  import dual_helix_pkg::dhs_axil_resp_t;
+#(
+    parameter type req_t = dhs_axil_req_t,
+    parameter type resp_t = dhs_axil_resp_t,
     parameter int MEM_BASE = '0,
     parameter int MEM_SIZE = 32,
     parameter int ADDR_WIDTH = 32,
@@ -73,7 +76,7 @@ module soc_ctrl_top #(
       .req_t   (dhs_axil_req_t),
       .resp_t  (dhs_axil_resp_t),
       .MEM_BASE(MEM_BASE),
-      .MEM_SIZE(12)
+      .MEM_SIZE(MEM_SIZE)
   ) u_cvtr (
       .arst_ni(arst_ni),
       .clk_i  (clk_i),
