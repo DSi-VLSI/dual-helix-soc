@@ -1,6 +1,7 @@
 module soc_ctrl_reg_if
   import dual_helix_pkg::DHS_ADDRW;
   import dual_helix_pkg::DHS_DATAW;
+  import dual_helix_pkg::RAM_BASE;
 
   import soc_ctrl_pkg::REG_BOOT_ADDR_CORE_0_ADDR;
   import soc_ctrl_pkg::REG_BOOT_ADDR_CORE_1_ADDR;
@@ -315,33 +316,33 @@ module soc_ctrl_reg_if
 
   always_ff @(posedge clk_i or negedge arst_ni) begin
     if (~arst_ni) begin
-      core_0_boot_addr_o      <= '0;  // TODO
-      core_1_boot_addr_o      <= '0;  // TODO
-      core_0_hart_id_o        <= '0;  // TODO
-      core_1_hart_id_o        <= '0;  // TODO
+      core_0_boot_addr_o      <= RAM_BASE;
+      core_1_boot_addr_o      <= RAM_BASE + 'h20000000;
+      core_0_hart_id_o        <= 'h0;
+      core_1_hart_id_o        <= 'h1;
       core_0_mtvec_o          <= '0;  // TODO
       core_1_mtvec_o          <= '0;  // TODO
-      core_0_arst_n_o         <= '1;  // TODO
-      core_0_clk_en_o         <= '0;  // TODO
-      core_1_arst_n_o         <= '1;  // TODO
-      core_1_clk_en_o         <= '0;  // TODO
-      core_link_arst_n_o      <= '1;  // TODO
-      core_link_clk_en_o      <= '0;  // TODO
-      core_link_clk_mux_sel_o <= '0;  // TODO
-      sys_link_arst_n_o       <= '1;  // TODO
-      sys_link_clk_en_o       <= '0;  // TODO
-      periph_link_arst_n_o    <= '1;  // TODO
-      periph_link_clk_en_o    <= '0;  // TODO
-      core_0_pll_ref_div_o    <= '0;  // TODO
-      core_0_pll_fb_div_o     <= '0;  // TODO
-      core_1_pll_ref_div_o    <= '0;  // TODO
-      core_1_pll_fb_div_o     <= '0;  // TODO
-      sys_link_pll_ref_div_o  <= '0;  // TODO
-      sys_link_pll_fb_div_o   <= '0;  // TODO
-      gpr0_o                  <= '0;  // TODO
-      gpr1_o                  <= '0;  // TODO
+      core_0_arst_n_o         <= '1;
+      core_0_clk_en_o         <= '0;
+      core_1_arst_n_o         <= '1;
+      core_1_clk_en_o         <= '0;
+      core_link_arst_n_o      <= '1;
+      core_link_clk_en_o      <= '1;  // TODO always_comb
+      core_link_clk_mux_sel_o <= '0;  // TODO always_comb
+      sys_link_arst_n_o       <= '1;
+      sys_link_clk_en_o       <= '0;
+      periph_link_arst_n_o    <= '1;
+      periph_link_clk_en_o    <= '1;
+      core_0_pll_ref_div_o    <= 'h10;  // TODO
+      core_0_pll_fb_div_o     <= 'h10;  // TODO
+      core_1_pll_ref_div_o    <= 'h10;  // TODO
+      core_1_pll_fb_div_o     <= 'h10;  // TODO
+      sys_link_pll_ref_div_o  <= 'h10;  // TODO
+      sys_link_pll_fb_div_o   <= 'h10;  // TODO
+      gpr0_o                  <= '0;
+      gpr1_o                  <= '0;
     end else begin
-      if (mem_wresp_o === 'b00) begin
+      if (mem_wresp_o == 'b00) begin
         unique case (mem_waddr_i)
           REG_BOOT_ADDR_CORE_0_ADDR: begin
             core_0_boot_addr_o <= mem_wdata_i;
