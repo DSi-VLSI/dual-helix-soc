@@ -11,8 +11,8 @@ module soc_ctrl_top
     parameter int REF_DIV_BW = 4,
     parameter int FB_DIV_BW = 12
 ) (
-    input logic clk_i,
-    input logic arst_ni,
+    input logic ref_clk_i,
+    input logic glb_arst_ni,
 
     input  req_t  axil_req_i,
     output resp_t axil_resp_o,
@@ -48,8 +48,8 @@ module soc_ctrl_top
     output logic sys_link_arst_n_o,
     output logic sys_link_clk_en_o,
 
-    output logic periph_link_arst_n_o,
-    output logic periph_link_clk_en_o
+    output logic periph_link_arst_n_o,  // TODO - Why not tie to global??
+    output logic periph_link_clk_en_o   // TODO - Why not tie to global??
 );
 
   logic                    intr_mem_we;
@@ -96,8 +96,8 @@ module soc_ctrl_top
       .MEM_BASE(MEM_BASE),
       .MEM_SIZE(MEM_SIZE)
   ) u_cvtr (
-      .arst_ni(arst_ni),
-      .clk_i  (clk_i),
+      .arst_ni(glb_arst_ni),
+      .clk_i  (ref_clk_i),
       .req_i  (axil_req_i),
       .resp_o (axil_resp_o),
 
@@ -117,8 +117,8 @@ module soc_ctrl_top
       .ADDR_WIDTH(ADDR_WIDTH),
       .DATA_WIDTH(DATA_WIDTH)
   ) u_reg_if (
-      .arst_ni                (arst_ni),
-      .clk_i                  (clk_i),
+      .arst_ni                (glb_arst_ni),
+      .clk_i                  (ref_clk_i),
       .mem_we_i               (intr_mem_we),
       .mem_waddr_i            (intr_mem_waddr),
       .mem_wdata_i            (intr_mem_wdata),
@@ -173,8 +173,8 @@ module soc_ctrl_top
       .REF_DEV_WIDTH(REF_DIV_BW),
       .FB_DIV_WIDTH (FB_DIV_BW)
   ) core_0_pll (
-      .arst_ni  (arst_ni),
-      .clk_ref_i(clk_i),
+      .arst_ni  (glb_arst_ni),
+      .clk_ref_i(ref_clk_i),
       .refdiv_i (core_0_pll_ref_div),
       .fbdiv_i  (core_0_pll_fb_div),
       .clk_o    (intr_core_0_pll_clk),
@@ -185,8 +185,8 @@ module soc_ctrl_top
       .REF_DEV_WIDTH(REF_DIV_BW),
       .FB_DIV_WIDTH (FB_DIV_BW)
   ) core_1_pll (
-      .arst_ni  (arst_ni),
-      .clk_ref_i(clk_i),
+      .arst_ni  (glb_arst_ni),
+      .clk_ref_i(ref_clk_i),
       .refdiv_i (core_1_pll_ref_div),
       .fbdiv_i  (core_1_pll_fb_div),
       .clk_o    (intr_core_1_pll_clk),
@@ -197,55 +197,66 @@ module soc_ctrl_top
       .REF_DEV_WIDTH(REF_DIV_BW),
       .FB_DIV_WIDTH (FB_DIV_BW)
   ) sys_link_pll (
-      .arst_ni  (arst_ni),
-      .clk_ref_i(clk_i),
+      .arst_ni  (glb_arst_ni),
+      .clk_ref_i(ref_clk_i),
       .refdiv_i (sys_link_pll_ref_div),
       .fbdiv_i  (sys_link_pll_fb_div),
       .clk_o    (intr_sys_link_pll_clk),
       .locked_o (sys_link_pll_locked)
   );
 
-  dhs_soc_ctrl_clk_rst_gen #() core_0_clk_rst_gen (
+  soc_ctrl_clk_rst_delay_gen #(100) core_0_clk_rst_gen (
+      .ref_clk_i(ref_clk_i),
+      .glb_arst_ni(glb_arst_ni),
       .arst_ni (intr_core_0_arst_n),
       .clk_en_i(intr_core_0_clk_en),
       .clk_i   (intr_core_0_pll_clk),
-      .arst_n_o(core_0_arst_n_o),
+      .arst_no(core_0_arst_n_o),
       .clk_en_o(core_0_clk_en_o),
       .clk_o   (core_0_clk_o)
   );
 
-  dhs_soc_ctrl_clk_rst_gen #() core_1_clk_rst_gen (
+  soc_ctrl_clk_rst_delay_gen #(100) core_1_clk_rst_gen (
+      .ref_clk_i(ref_clk_i),
+      .glb_arst_ni(glb_arst_ni),
       .arst_ni (intr_core_1_arst_n),
       .clk_en_i(intr_core_1_clk_en),
       .clk_i   (intr_core_1_pll_clk),
-      .arst_n_o(core_1_arst_n_o),
+      .arst_no(core_1_arst_n_o),
       .clk_en_o(core_1_clk_en_o),
       .clk_o   (core_1_clk_o)
   );
 
-  dhs_soc_ctrl_clk_rst_gen #() core_link_clk_rst_gen (
+  soc_ctrl_clk_rst_delay_gen #(100) core_link_clk_rst_gen (
+      .ref_clk_i(ref_clk_i),
+      .glb_arst_ni(glb_arst_ni),
       .arst_ni (intr_core_link_arst_n),
       .clk_en_i(intr_core_link_clk_en),
       .clk_i   (intr_core_link_clk),
-      .arst_n_o(core_link_arst_n_o),
+      .arst_no(core_link_arst_n_o),
       .clk_en_o(core_link_clk_en_o),
       .clk_o   (core_link_clk_o)
   );
 
-  dhs_soc_ctrl_clk_rst_gen #() sys_link_clk_rst_gen (
+  soc_ctrl_clk_rst_delay_gen #(100) sys_link_clk_rst_gen (
+      .ref_clk_i(ref_clk_i),
+      .glb_arst_ni(glb_arst_ni),
       .arst_ni (intr_sys_link_arst_n),
       .clk_en_i(intr_sys_link_clk_en),
       .clk_i   (intr_sys_link_pll_clk),
-      .arst_n_o(sys_link_arst_n_o),
+      .arst_no(sys_link_arst_n_o),
       .clk_en_o(sys_link_clk_en_o),
       .clk_o   (sys_link_clk_o)
   );
 
-  dhs_soc_ctrl_clk_rst_gen #() periph_link_clk_rst_gen (
+  // TODO - Why not tie to global??
+  soc_ctrl_clk_rst_delay_gen #(100) periph_link_clk_rst_gen (
+      .ref_clk_i(ref_clk_i),
+      .glb_arst_ni(glb_arst_ni),
       .arst_ni (intr_periph_link_arst_n),
       .clk_en_i(intr_periph_link_clk_en),
       .clk_i   (clk_i),
-      .arst_n_o(periph_link_arst_n_o),
+      .arst_no(periph_link_arst_n_o),
       .clk_en_o(periph_link_clk_en_o),
       .clk_o   ()
   );

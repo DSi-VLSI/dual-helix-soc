@@ -19,6 +19,8 @@ ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_rx.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_top.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_tx.sv
 
+${DUAL_HELIX_SOC_DIR}/hardware/source/soc_ctrl/soc_ctrl_counter.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/soc_ctrl/soc_ctrl_clk_rst_delay_gen.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/soc_ctrl/soc_ctrl_reg_if.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/soc_ctrl/soc_ctrl_top.sv
 
