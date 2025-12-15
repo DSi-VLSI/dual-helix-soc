@@ -33,10 +33,14 @@ module soc_ctrl_clk_rst_delay_gen_tb;
 
     `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
     #500ns;
-    `APPLY_RST(glb_arst_ni, 100ns,);
-    `START_CLK(ref_clk_i, 100);
-    `START_CLK(clk_i, 100);
 
+    `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
+    #500ns;
+    `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
+    #20ns;
+    `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
+    #500ns;
+    `APPLY_RST(glb_arst_ni, 100ns,);
     `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
     #500ns;
     $finish;
