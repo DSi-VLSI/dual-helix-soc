@@ -2,6 +2,13 @@
 -i ${APB_DIR}/include
 -i ${AXI_DIR}/include
 
+# TODO
+${DUAL_HELIX_SOC_DIR}/hardware/source/stubby-wubby/axi_master_stub.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/stubby-wubby/axi_slave_stub.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/stubby-wubby/axil_master_stub.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/stubby-wubby/axil_slave_stub.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/stubby-wubby/clk_rst_gen_stub.sv
+
 ${COMMON_DIR}/rtl/dff.sv
 ${COMMON_DIR}/rtl/edge_detector.sv
 ${COMMON_DIR}/rtl/fifo.sv

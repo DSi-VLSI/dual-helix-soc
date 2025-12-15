@@ -17,15 +17,6 @@ module soc_ctrl_top
     input  req_t  axil_req_i,
     output resp_t axil_resp_o,
 
-    input boot_mode_i,
-
-    output logic core_0_clk_o,
-    output logic core_1_clk_o,
-    output logic sys_link_clk_o,
-
-    output logic [DATA_WIDTH-1:0] gpr0_o,
-    output logic [DATA_WIDTH-1:0] gpr1_o,
-
     output logic [DATA_WIDTH-1:0] core_0_boot_addr_o,
     output logic [DATA_WIDTH-1:0] core_1_boot_addr_o,
 
@@ -35,16 +26,25 @@ module soc_ctrl_top
     output logic [DATA_WIDTH-1:0] core_0_mtvec_o,
     output logic [DATA_WIDTH-1:0] core_1_mtvec_o,
 
+    input boot_mode_i,
+
+    output logic [DATA_WIDTH-1:0] gpr0_o,
+    output logic [DATA_WIDTH-1:0] gpr1_o,
+
+
+    output logic core_0_clk_o,
     output logic core_0_arst_n_o,
     output logic core_0_clk_en_o,
 
+    output logic core_1_clk_o,
     output logic core_1_arst_n_o,
     output logic core_1_clk_en_o,
 
+    output logic core_link_clk_o,
     output logic core_link_arst_n_o,
     output logic core_link_clk_en_o,
-    output logic core_link_clk_mux_sel_o,
 
+    output logic sys_link_clk_o,
     output logic sys_link_arst_n_o,
     output logic sys_link_clk_en_o,
 
@@ -62,6 +62,19 @@ module soc_ctrl_top
   logic [  DATA_WIDTH-1:0] intr_mem_rdata;
   logic [             1:0] intr_mem_rresp;
 
+
+  logic                    intr_core_0_arst_n;
+  logic                    intr_core_0_clk_en;
+  logic                    intr_core_1_arst_n;
+  logic                    intr_core_1_clk_en;
+  logic                    intr_core_link_arst_n;
+  logic                    intr_core_link_clk_en;
+  logic                    intr_core_link_clk_mux_sel;
+  logic                    intr_sys_link_arst_n;
+  logic                    intr_sys_link_clk_en;
+  logic                    intr_periph_link_arst_n;
+  logic                    intr_periph_link_clk_en;
+
   logic [  REF_DIV_BW-1:0] core_0_pll_ref_div;
   logic [   FB_DIV_BW-1:0] core_0_pll_fb_div;
   logic                    core_0_pll_locked;
@@ -71,6 +84,11 @@ module soc_ctrl_top
   logic [  REF_DIV_BW-1:0] sys_link_pll_ref_div;
   logic [   FB_DIV_BW-1:0] sys_link_pll_fb_div;
   logic                    sys_link_pll_locked;
+
+  logic                    intr_core_0_pll_clk;
+  logic                    intr_core_1_pll_clk;
+  logic                    intr_core_link_clk;
+  logic                    intr_sys_link_pll_clk;
 
   axil_to_simple_if #(
       .req_t   (dhs_axil_req_t),
@@ -116,17 +134,17 @@ module soc_ctrl_top
       .core_1_hart_id_o       (core_1_hart_id_o),
       .core_0_mtvec_o         (core_0_mtvec_o),
       .core_1_mtvec_o         (core_1_mtvec_o),
-      .core_0_arst_n_o        (core_0_arst_n_o),
-      .core_0_clk_en_o        (core_0_clk_en_o),
-      .core_1_arst_n_o        (core_1_arst_n_o),
-      .core_1_clk_en_o        (core_1_clk_en_o),
-      .core_link_arst_n_o     (core_link_arst_n_o),
-      .core_link_clk_en_o     (core_link_clk_en_o),
-      .core_link_clk_mux_sel_o(core_link_clk_mux_sel_o),
-      .sys_link_arst_n_o      (sys_link_arst_n_o),
-      .sys_link_clk_en_o      (sys_link_clk_en_o),
-      .periph_link_arst_n_o   (periph_link_arst_n_o),
-      .periph_link_clk_en_o   (periph_link_clk_en_o),
+      .core_0_arst_n_o        (intr_core_0_arst_n),
+      .core_0_clk_en_o        (intr_core_0_clk_en),
+      .core_1_arst_n_o        (intr_core_1_arst_n),
+      .core_1_clk_en_o        (intr_core_1_clk_en),
+      .core_link_arst_n_o     (intr_core_link_arst_n),
+      .core_link_clk_en_o     (intr_core_link_clk_en),
+      .core_link_clk_mux_sel_o(intr_core_link_clk_mux_sel),
+      .sys_link_arst_n_o      (intr_sys_link_arst_n),
+      .sys_link_clk_en_o      (intr_sys_link_clk_en),
+      .periph_link_arst_n_o   (intr_periph_link_arst_n),
+      .periph_link_clk_en_o   (intr_periph_link_clk_en),
       .core_0_pll_ref_div_o   (core_0_pll_ref_div),
       .core_0_pll_fb_div_o    (core_0_pll_fb_div),
       .core_0_pll_locked_i    (core_0_pll_locked),
@@ -141,6 +159,16 @@ module soc_ctrl_top
       .boot_mode_i            (boot_mode_i)
   );
 
+
+  always_comb begin
+    if (intr_core_link_clk_mux_sel) begin
+      intr_core_link_clk = intr_core_1_pll_clk;
+    end else begin
+      intr_core_link_clk = intr_core_0_pll_clk;
+    end
+  end
+
+
   pll #(
       .REF_DEV_WIDTH(REF_DIV_BW),
       .FB_DIV_WIDTH (FB_DIV_BW)
@@ -149,7 +177,7 @@ module soc_ctrl_top
       .clk_ref_i(clk_i),
       .refdiv_i (core_0_pll_ref_div),
       .fbdiv_i  (core_0_pll_fb_div),
-      .clk_o    (core_0_clk_o),
+      .clk_o    (intr_core_0_pll_clk),
       .locked_o (core_0_pll_locked)
   );
 
@@ -161,7 +189,7 @@ module soc_ctrl_top
       .clk_ref_i(clk_i),
       .refdiv_i (core_1_pll_ref_div),
       .fbdiv_i  (core_1_pll_fb_div),
-      .clk_o    (core_1_clk_o),
+      .clk_o    (intr_core_1_pll_clk),
       .locked_o (core_1_pll_locked)
   );
 
@@ -173,8 +201,53 @@ module soc_ctrl_top
       .clk_ref_i(clk_i),
       .refdiv_i (sys_link_pll_ref_div),
       .fbdiv_i  (sys_link_pll_fb_div),
-      .clk_o    (sys_link_clk_o),
+      .clk_o    (intr_sys_link_pll_clk),
       .locked_o (sys_link_pll_locked)
+  );
+
+  dhs_soc_ctrl_clk_rst_gen #() core_0_clk_rst_gen (
+      .arst_ni (intr_core_0_arst_n),
+      .clk_en_i(intr_core_0_clk_en),
+      .clk_i   (intr_core_0_pll_clk),
+      .arst_n_o(core_0_arst_n_o),
+      .clk_en_o(core_0_clk_en_o),
+      .clk_o   (core_0_clk_o)
+  );
+
+  dhs_soc_ctrl_clk_rst_gen #() core_1_clk_rst_gen (
+      .arst_ni (intr_core_1_arst_n),
+      .clk_en_i(intr_core_1_clk_en),
+      .clk_i   (intr_core_1_pll_clk),
+      .arst_n_o(core_1_arst_n_o),
+      .clk_en_o(core_1_clk_en_o),
+      .clk_o   (core_1_clk_o)
+  );
+
+  dhs_soc_ctrl_clk_rst_gen #() core_link_clk_rst_gen (
+      .arst_ni (intr_core_link_arst_n),
+      .clk_en_i(intr_core_link_clk_en),
+      .clk_i   (intr_core_link_clk),
+      .arst_n_o(core_link_arst_n_o),
+      .clk_en_o(core_link_clk_en_o),
+      .clk_o   (core_link_clk_o)
+  );
+
+  dhs_soc_ctrl_clk_rst_gen #() sys_link_clk_rst_gen (
+      .arst_ni (intr_sys_link_arst_n),
+      .clk_en_i(intr_sys_link_clk_en),
+      .clk_i   (intr_sys_link_pll_clk),
+      .arst_n_o(sys_link_arst_n_o),
+      .clk_en_o(sys_link_clk_en_o),
+      .clk_o   (sys_link_clk_o)
+  );
+
+  dhs_soc_ctrl_clk_rst_gen #() periph_link_clk_rst_gen (
+      .arst_ni (intr_periph_link_arst_n),
+      .clk_en_i(intr_periph_link_clk_en),
+      .clk_i   (clk_i),
+      .arst_n_o(periph_link_arst_n_o),
+      .clk_en_o(periph_link_clk_en_o),
+      .clk_o   ()
   );
 
 endmodule
