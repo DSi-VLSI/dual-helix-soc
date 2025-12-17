@@ -18,6 +18,7 @@ module soc_ctrl_clk_rst_delay_gen #(
   logic [$clog2(DELAY_CYCLES)-1:0] delay_status;
   logic                            clk_en_good_to_go;
   logic                            clk_en_pass_mux_sel;
+  logic clk_en_pass_reg, clk_en_pass_reg_d;
 
   always_comb begin
     arst_no = arst_ni;
@@ -58,11 +59,21 @@ module soc_ctrl_clk_rst_delay_gen #(
 
   always_comb begin
     if (clk_en_pass_mux_sel) begin
-      clk_en_o = clk_en_i;
+      clk_en_o = clk_en_pass_reg_d;
     end else begin
       clk_en_o = '0;
     end
     clk_o = clk_i & clk_en_o;
+  end
+
+  always_ff @(posedge ~clk_i) begin
+    if (~intr_arst_n) begin
+      clk_en_pass_reg   <= '0;
+      clk_en_pass_reg_d <= '0;
+    end else begin
+      clk_en_pass_reg   <= clk_en_i;
+      clk_en_pass_reg_d <= clk_en_pass_reg;
+    end
   end
 
   always_ff @(posedge ref_clk_i or negedge intr_arst_n) begin

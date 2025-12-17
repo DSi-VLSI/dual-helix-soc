@@ -26,7 +26,7 @@ module soc_ctrl_top
     output logic [DATA_WIDTH-1:0] core_0_mtvec_o,
     output logic [DATA_WIDTH-1:0] core_1_mtvec_o,
 
-    input boot_mode_i,
+    input logic boot_mode_i,
 
     output logic [DATA_WIDTH-1:0] gpr0_o,
     output logic [DATA_WIDTH-1:0] gpr1_o,
@@ -48,8 +48,9 @@ module soc_ctrl_top
     output logic sys_link_arst_n_o,
     output logic sys_link_clk_en_o,
 
-    output logic periph_link_arst_n_o,  // TODO - Why not tie to global??
-    output logic periph_link_clk_en_o   // TODO - Why not tie to global??
+    output logic periph_link_clk_o,
+    output logic periph_link_arst_n_o,
+    output logic periph_link_clk_en_o
 );
 
   logic                    intr_mem_we;
@@ -85,10 +86,10 @@ module soc_ctrl_top
   logic [   FB_DIV_BW-1:0] sys_link_pll_fb_div;
   logic                    sys_link_pll_locked;
 
-  logic                    intr_core_0_pll_clk;
-  logic                    intr_core_1_pll_clk;
-  logic                    intr_core_link_clk;
-  logic                    intr_sys_link_pll_clk;
+  logic intr_core_0_pll_clk, intr_core_0_pll_clk_gated;
+  logic intr_core_1_pll_clk, intr_core_1_pll_clk_gated;
+  logic intr_core_link_clk;
+  logic intr_sys_link_pll_clk, intr_sys_link_pll_clk_gated;
 
   axil_to_simple_if #(
       .req_t   (dhs_axil_req_t),
@@ -159,16 +160,6 @@ module soc_ctrl_top
       .boot_mode_i            (boot_mode_i)
   );
 
-
-  always_comb begin
-    if (intr_core_link_clk_mux_sel) begin
-      intr_core_link_clk = intr_core_1_pll_clk;
-    end else begin
-      intr_core_link_clk = intr_core_0_pll_clk;
-    end
-  end
-
-
   pll #(
       .REF_DEV_WIDTH(REF_DIV_BW),
       .FB_DIV_WIDTH (FB_DIV_BW)
@@ -205,12 +196,41 @@ module soc_ctrl_top
       .locked_o (sys_link_pll_locked)
   );
 
+  clk_gate u_core_0_clk_gate (
+      .arst_ni(glb_arst_n),
+      .en_i   (core_0_pll_locked),
+      .clk_i  (intr_core_0_pll_clk),
+      .clk_o  (intr_core_0_pll_clk_gated)
+  );
+
+  clk_gate u_core_1_clk_gate (
+      .arst_ni(glb_arst_n),
+      .en_i   (core_1_pll_locked),
+      .clk_i  (intr_core_1_pll_clk),
+      .clk_o  (intr_core_1_pll_clk_gated)
+  );
+
+  clk_mux u_core_clk_mux (
+      .arst_ni(glb_arst_n),
+      .sel_i  (intr_core_link_clk_mux_sel),
+      .clk0_i (intr_core_1_pll_clk_gated),
+      .clk1_i (intr_core_0_pll_clk_gated),
+      .clk_o  (intr_core_link_clk)
+  );
+
+  clk_gate u_core_1_clk_gate (
+      .arst_ni(glb_arst_n),
+      .en_i   (sys_link_pll_locked),
+      .clk_i  (intr_sys_link_pll_clk),
+      .clk_o  (intr_sys_link_pll_clk_gated)
+  );
+
   soc_ctrl_clk_rst_delay_gen #(100) core_0_clk_rst_gen (
       .ref_clk_i(ref_clk_i),
       .glb_arst_ni(glb_arst_ni),
       .arst_ni (intr_core_0_arst_n),
       .clk_en_i(intr_core_0_clk_en),
-      .clk_i   (intr_core_0_pll_clk),
+      .clk_i   (intr_core_0_pll_clk_gated),
       .arst_no(core_0_arst_n_o),
       .clk_en_o(core_0_clk_en_o),
       .clk_o   (core_0_clk_o)
@@ -221,7 +241,7 @@ module soc_ctrl_top
       .glb_arst_ni(glb_arst_ni),
       .arst_ni (intr_core_1_arst_n),
       .clk_en_i(intr_core_1_clk_en),
-      .clk_i   (intr_core_1_pll_clk),
+      .clk_i   (intr_core_1_pll_clk_gated),
       .arst_no(core_1_arst_n_o),
       .clk_en_o(core_1_clk_en_o),
       .clk_o   (core_1_clk_o)
@@ -243,22 +263,23 @@ module soc_ctrl_top
       .glb_arst_ni(glb_arst_ni),
       .arst_ni (intr_sys_link_arst_n),
       .clk_en_i(intr_sys_link_clk_en),
-      .clk_i   (intr_sys_link_pll_clk),
+      .clk_i   (intr_sys_link_pll_clk_gated),
       .arst_no(sys_link_arst_n_o),
       .clk_en_o(sys_link_clk_en_o),
       .clk_o   (sys_link_clk_o)
   );
 
-  // TODO - Why not tie to global??
+  assign intr_full_periph_link_arst_n = intr_periph_link_arst_n && glb_arst_n;
+
   soc_ctrl_clk_rst_delay_gen #(100) periph_link_clk_rst_gen (
       .ref_clk_i(ref_clk_i),
       .glb_arst_ni(glb_arst_ni),
-      .arst_ni (intr_periph_link_arst_n),
-      .clk_en_i(intr_periph_link_clk_en),
-      .clk_i   (clk_i),
+      .arst_ni (intr_full_periph_link_arst_n),
+      .clk_en_i('1),
+      .clk_i   (ref_clk_i),
       .arst_no(periph_link_arst_n_o),
       .clk_en_o(periph_link_clk_en_o),
-      .clk_o   ()
+      .clk_o   (periph_link_clk_o)
   );
 
 endmodule

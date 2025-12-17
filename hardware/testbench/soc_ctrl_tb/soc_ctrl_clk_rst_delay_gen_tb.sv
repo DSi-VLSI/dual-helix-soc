@@ -8,6 +8,7 @@ module soc_ctrl_clk_rst_delay_gen_tb;
   logic clk_i;
   logic arst_ni;
   logic clk_en_i;
+  logic pll_lock_i;
   logic clk_o;
   logic arst_no;
   logic clk_en_o;
@@ -21,29 +22,29 @@ module soc_ctrl_clk_rst_delay_gen_tb;
       .clk_i,
       .arst_ni,
       .clk_en_i,
+      .pll_lock_i,
       .clk_o,
       .arst_no,
       .clk_en_o
   );
 
   initial begin
+    pll_lock_i = '0;
     `APPLY_RST(glb_arst_ni, 100ns,);
     `START_CLK(ref_clk_i, 100);
-    `START_CLK(clk_i, 100);
+    `START_CLK(clk_i, 3200);
 
     `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
-    #500ns;
-
-    `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
-    #500ns;
-    `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
-    #20ns;
-    `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
-    #500ns;
-    `APPLY_RST(glb_arst_ni, 100ns,);
-    `APPLY_RST(arst_ni, 100ns, clk_en_i <= 1'b1;);
-    #500ns;
+    #2002ns;
+    pll_lock_i <= '1;
+    #2002ns;
+    clk_en_i <= '0;
+    #2us;
     $finish;
   end
+
+  // specify
+  //   $width(__SIGNAL__, __TRIGGER__, __MIN_WIDTH__, __TOLARENCE__, __NOTIFIER__);
+  // endspecify
 
 endmodule
