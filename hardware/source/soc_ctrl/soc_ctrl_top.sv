@@ -196,21 +196,21 @@ module soc_ctrl_top
       .locked_o (sys_link_pll_locked)
   );
 
-  clk_gate u_core_0_clk_gate (
+  clk_gate u_core_0_clk_gate ( // TODO: write new ones
       .arst_ni(glb_arst_n),
       .en_i   (core_0_pll_locked),
       .clk_i  (intr_core_0_pll_clk),
       .clk_o  (intr_core_0_pll_clk_gated)
   );
 
-  clk_gate u_core_1_clk_gate (
+  clk_gate u_core_1_clk_gate ( // TODO: write new ones
       .arst_ni(glb_arst_n),
       .en_i   (core_1_pll_locked),
       .clk_i  (intr_core_1_pll_clk),
       .clk_o  (intr_core_1_pll_clk_gated)
   );
 
-  clk_mux u_core_clk_mux (
+  clk_mux u_core_clk_mux ( // TODO: write new ones
       .arst_ni(glb_arst_n),
       .sel_i  (intr_core_link_clk_mux_sel),
       .clk0_i (intr_core_1_pll_clk_gated),
@@ -218,7 +218,7 @@ module soc_ctrl_top
       .clk_o  (intr_core_link_clk)
   );
 
-  clk_gate u_core_1_clk_gate (
+  clk_gate u_sys_link_clk_gate ( // TODO: write new ones
       .arst_ni(glb_arst_n),
       .en_i   (sys_link_pll_locked),
       .clk_i  (intr_sys_link_pll_clk),
@@ -269,12 +269,10 @@ module soc_ctrl_top
       .clk_o   (sys_link_clk_o)
   );
 
-  assign intr_full_periph_link_arst_n = intr_periph_link_arst_n && glb_arst_n;
-
   soc_ctrl_clk_rst_delay_gen #(100) periph_link_clk_rst_gen (
       .ref_clk_i(ref_clk_i),
       .glb_arst_ni(glb_arst_ni),
-      .arst_ni (intr_full_periph_link_arst_n),
+      .arst_ni (intr_periph_link_arst_n),
       .clk_en_i('1),
       .clk_i   (ref_clk_i),
       .arst_no(periph_link_arst_n_o),

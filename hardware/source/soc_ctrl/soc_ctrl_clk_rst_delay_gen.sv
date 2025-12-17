@@ -21,8 +21,8 @@ module soc_ctrl_clk_rst_delay_gen #(
   logic clk_en_pass_reg, clk_en_pass_reg_d;
 
   always_comb begin
-    arst_no = arst_ni;
     intr_arst_n = glb_arst_ni && arst_ni;
+    arst_no = intr_arst_n;
   end
 
   edge_detector #(
@@ -30,9 +30,9 @@ module soc_ctrl_clk_rst_delay_gen #(
       .NEGEDGE('0),
       .ASYNC  ('0)
   ) reset_posedge (
-      .arst_ni  (arst_ni),
+      .arst_ni  (intr_arst_n),
       .clk_i    (ref_clk_i),
-      .d_i      (arst_ni),
+      .d_i      (intr_arst_n),
       .posedge_o(arst_n_posedge_found),
       .negedge_o()
   );
@@ -57,25 +57,6 @@ module soc_ctrl_clk_rst_delay_gen #(
     end
   end
 
-  always_comb begin
-    if (clk_en_pass_mux_sel) begin
-      clk_en_o = clk_en_pass_reg_d;
-    end else begin
-      clk_en_o = '0;
-    end
-    clk_o = clk_i & clk_en_o;
-  end
-
-  always_ff @(posedge ~clk_i) begin
-    if (~intr_arst_n) begin
-      clk_en_pass_reg   <= '0;
-      clk_en_pass_reg_d <= '0;
-    end else begin
-      clk_en_pass_reg   <= clk_en_i;
-      clk_en_pass_reg_d <= clk_en_pass_reg;
-    end
-  end
-
   always_ff @(posedge ref_clk_i or negedge intr_arst_n) begin
     if (!intr_arst_n) begin
       initiate_delay <= '0;
@@ -90,4 +71,24 @@ module soc_ctrl_clk_rst_delay_gen #(
       end
     end
   end
+
+  always_comb begin
+    if (clk_en_pass_mux_sel) begin
+      clk_en_pass_reg = clk_en_i;
+    end else begin
+      clk_en_pass_reg = '0;
+    end
+  end
+
+  always_ff @(negedge clk_i or negedge intr_arst_n) begin
+    if (~intr_arst_n) begin
+      clk_en_pass_reg_d <= '0;
+      clk_en_o <= '0;
+    end else begin
+      clk_en_pass_reg_d <= clk_en_pass_reg;
+      clk_en_o <= clk_en_pass_reg_d;
+    end
+  end
+
+  assign clk_o = clk_i & clk_en_o;
 endmodule
