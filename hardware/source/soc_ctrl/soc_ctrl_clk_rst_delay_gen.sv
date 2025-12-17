@@ -18,7 +18,7 @@ module soc_ctrl_clk_rst_delay_gen #(
   logic [$clog2(DELAY_CYCLES)-1:0] delay_status;
   logic                            clk_en_good_to_go;
   logic                            clk_en_pass_mux_sel;
-  logic clk_en_pass_reg, clk_en_pass_reg_d;
+  logic clk_en_synced, clk_en_pass;
 
   always_comb begin
     intr_arst_n = glb_arst_ni && arst_ni;
@@ -28,7 +28,7 @@ module soc_ctrl_clk_rst_delay_gen #(
   edge_detector #(
       .POSEDGE('1),
       .NEGEDGE('0),
-      .ASYNC  ('0)
+      .ASYNC  ('1)
   ) reset_posedge (
       .arst_ni  (intr_arst_n),
       .clk_i    (ref_clk_i),
@@ -72,23 +72,35 @@ module soc_ctrl_clk_rst_delay_gen #(
     end
   end
 
+  dual_flop_sync #(
+      .FETCH_AT_POSEDGE('1),
+      .LAUNCH_AT_POSEDGE('1),
+      .BYPASS_EN('1)
+  ) u_df_sync_clk_en_i (
+      .clk_i  (clk_i),
+      .arst_ni(intr_arst_n),
+      .d_i    (clk_en_i),
+      .q_o    (clk_en_synced)
+  );
+
   always_comb begin
     if (clk_en_pass_mux_sel) begin
-      clk_en_pass_reg = clk_en_i;
+      clk_en_pass = clk_en_synced;
     end else begin
-      clk_en_pass_reg = '0;
+      clk_en_pass = '0;
     end
   end
 
-  always_ff @(negedge clk_i or negedge intr_arst_n) begin
-    if (~intr_arst_n) begin
-      clk_en_pass_reg_d <= '0;
-      clk_en_o <= '0;
-    end else begin
-      clk_en_pass_reg_d <= clk_en_pass_reg;
-      clk_en_o <= clk_en_pass_reg_d;
-    end
-  end
+  clk_gate #(
+      .FETCH_AT_POSEDGE('0),
+      .LAUNCH_AT_POSEDGE('0),
+      .BYPASS_EN('0)
+  ) u_clk_gate (
+      .arst_ni (intr_arst_n),
+      .clk_en_i(clk_en_pass),
+      .clk_i   (clk_i),
+      .clk_en_o(clk_en_o),
+      .clk_o   (clk_o)
+  );
 
-  assign clk_o = clk_i & clk_en_o;
 endmodule
