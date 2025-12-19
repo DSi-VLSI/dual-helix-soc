@@ -105,7 +105,7 @@ module soc_ctrl_reg_if
 
     output logic core_link_arst_n_o,
     output logic core_link_clk_en_o,
-    output logic core_link_clk_mux_sel_o,
+    input  logic core_link_clk_mux_sel_o,
 
     // ========================================================================
     // System Link Clk Rst
@@ -316,31 +316,30 @@ module soc_ctrl_reg_if
 
   always_ff @(posedge clk_i or negedge arst_ni) begin
     if (~arst_ni) begin
-      core_0_boot_addr_o      <= RAM_BASE;
-      core_1_boot_addr_o      <= RAM_BASE + 'h20000000;
-      core_0_hart_id_o        <= 'h0;
-      core_1_hart_id_o        <= 'h1;
-      core_0_mtvec_o          <= '0;  // TODO
-      core_1_mtvec_o          <= '0;  // TODO
-      core_0_arst_n_o         <= '1;
-      core_0_clk_en_o         <= '0;
-      core_1_arst_n_o         <= '1;
-      core_1_clk_en_o         <= '0;
-      core_link_arst_n_o      <= '1;
-      core_link_clk_en_o      <= '1;  // TODO always_comb
-      core_link_clk_mux_sel_o <= '0;  // TODO always_comb
-      sys_link_arst_n_o       <= '1;
-      sys_link_clk_en_o       <= '0;
-      periph_link_arst_n_o    <= '1;
-      periph_link_clk_en_o    <= '1;
-      core_0_pll_ref_div_o    <= 'h10;  // TODO
-      core_0_pll_fb_div_o     <= 'h10;  // TODO
-      core_1_pll_ref_div_o    <= 'h10;  // TODO
-      core_1_pll_fb_div_o     <= 'h10;  // TODO
-      sys_link_pll_ref_div_o  <= 'h10;  // TODO
-      sys_link_pll_fb_div_o   <= 'h10;  // TODO
-      gpr0_o                  <= '0;
-      gpr1_o                  <= '0;
+      core_0_boot_addr_o     <= RAM_BASE;
+      core_1_boot_addr_o     <= RAM_BASE + 'h20000000;
+      core_0_hart_id_o       <= 'h0;
+      core_1_hart_id_o       <= 'h1;
+      core_0_mtvec_o         <= '0;  // TODO
+      core_1_mtvec_o         <= '0;  // TODO
+      core_0_arst_n_o        <= '1;
+      core_0_clk_en_o        <= '0;
+      core_1_arst_n_o        <= '1;
+      core_1_clk_en_o        <= '0;
+      core_link_arst_n_o     <= '1;
+      core_link_clk_en_o     <= '1;  // TODO always_comb
+      sys_link_arst_n_o      <= '1;
+      sys_link_clk_en_o      <= '1;
+      periph_link_arst_n_o   <= '1;
+      periph_link_clk_en_o   <= '1;
+      core_0_pll_ref_div_o   <= 'h10;  // TODO
+      core_0_pll_fb_div_o    <= 'h10;  // TODO
+      core_1_pll_ref_div_o   <= 'h10;  // TODO
+      core_1_pll_fb_div_o    <= 'h10;  // TODO
+      sys_link_pll_ref_div_o <= 'h10;  // TODO
+      sys_link_pll_fb_div_o  <= 'h10;  // TODO
+      gpr0_o                 <= '0;
+      gpr1_o                 <= '0;
     end else begin
       if (mem_wresp_o == 'b00) begin
         unique case (mem_waddr_i)
@@ -371,9 +370,8 @@ module soc_ctrl_reg_if
             core_1_clk_en_o <= mem_wdata_i[1];
           end
           REG_CLK_RST_CORE_LINK_ADDR: begin
-            core_link_arst_n_o      <= mem_wdata_i[0];
-            core_link_clk_en_o      <= mem_wdata_i[1];
-            core_link_clk_mux_sel_o <= mem_wdata_i[2];
+            core_link_arst_n_o <= mem_wdata_i[0];
+            core_link_clk_en_o <= mem_wdata_i[1];
           end
           REG_CLK_RST_SYS_LINK_ADDR: begin
             sys_link_arst_n_o <= mem_wdata_i[0];

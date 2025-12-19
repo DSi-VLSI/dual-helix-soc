@@ -196,31 +196,39 @@ module soc_ctrl_top
       .locked_o (sys_link_pll_locked)
   );
 
-  clk_gate u_core_0_clk_gate ( // TODO: write new ones
-      .arst_ni(glb_arst_n),
-      .en_i   (core_0_pll_locked),
+  clk_gate u_core_0_clk_gate (  // TODO: write new ones
+      .arst_ni(glb_arst_ni),
+      .clk_en_i   (core_0_pll_locked),
       .clk_i  (intr_core_0_pll_clk),
       .clk_o  (intr_core_0_pll_clk_gated)
   );
 
-  clk_gate u_core_1_clk_gate ( // TODO: write new ones
-      .arst_ni(glb_arst_n),
-      .en_i   (core_1_pll_locked),
+  clk_gate u_core_1_clk_gate (  // TODO: write new ones
+      .arst_ni(glb_arst_ni),
+      .clk_en_i   (core_1_pll_locked),
       .clk_i  (intr_core_1_pll_clk),
       .clk_o  (intr_core_1_pll_clk_gated)
   );
 
-  clk_mux u_core_clk_mux ( // TODO: write new ones
-      .arst_ni(glb_arst_n),
+  always_comb begin
+    if (core_0_pll_fb_div >= core_1_pll_fb_div) begin
+      intr_core_link_clk_mux_sel = '0;
+    end else begin
+      intr_core_link_clk_mux_sel = '1;
+    end
+  end
+
+  clk_mux u_core_clk_mux (  // TODO: write new ones
+      .arst_ni(glb_arst_ni),
       .sel_i  (intr_core_link_clk_mux_sel),
-      .clk0_i (intr_core_1_pll_clk_gated),
-      .clk1_i (intr_core_0_pll_clk_gated),
+      .clk0_i (intr_core_0_pll_clk_gated),
+      .clk1_i (intr_core_1_pll_clk_gated),
       .clk_o  (intr_core_link_clk)
   );
 
-  clk_gate u_sys_link_clk_gate ( // TODO: write new ones
-      .arst_ni(glb_arst_n),
-      .en_i   (sys_link_pll_locked),
+  clk_gate u_sys_link_clk_gate (  // TODO: write new ones
+      .arst_ni(glb_arst_ni),
+      .clk_en_i   (sys_link_pll_locked),
       .clk_i  (intr_sys_link_pll_clk),
       .clk_o  (intr_sys_link_pll_clk_gated)
   );

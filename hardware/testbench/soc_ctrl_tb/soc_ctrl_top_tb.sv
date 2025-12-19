@@ -4,7 +4,6 @@ module soc_ctrl_top_tb;
   // INCLUDES
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
-  `include "simple_axil_m_driver.svh"
   `include "tb_dpd.svh"
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +84,8 @@ module soc_ctrl_top_tb;
   // VARIABLES
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
+  semaphore                        write_arbiter = new(1);
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // DUT INSTANTIATION
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,14 +133,41 @@ module soc_ctrl_top_tb;
   // MACROS
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
-  `SIMPLE_AXIL_M_DRIVER(soc_ctrl, ref_clk, glb_arst_n, axil_req, axil_resp)
-
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // METHODS
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   task automatic apply_global_reset();
-    `APPLY_RST(glb_arst_n, 100,)
+    `APPLY_RST(glb_arst_n, 100, axil_req <= '0;)
+  endtask
+
+  task automatic soc_ctrl_write_32(logic [ADDR_WIDTH-1:0] t_addr, logic [DATA_WIDTH-1:0] t_data,
+                                   logic [1:0] t_resp);
+    write_arbiter.get(1);
+    fork
+      begin
+        axil_req.aw_valid <= '1;
+        axil_req.aw.addr  <= t_addr;
+
+        do @(posedge ref_clk); while (~axil_resp.aw_ready);
+        axil_req.aw_valid <= '0;
+      end
+      begin
+        axil_req.w_valid <= '1;
+        axil_req.w.data  <= t_data;
+
+        do @(posedge ref_clk); while (~axil_resp.w_ready);
+        axil_req.w_valid <= '0;
+      end
+      begin
+        axil_req.b_ready <= '1;
+
+        do @(posedge ref_clk); while (~axil_resp.b_valid);
+        t_resp = axil_resp.b.resp;
+        axil_req.b_ready <= '0;
+      end
+    join
+    write_arbiter.put(1);
   endtask
 
   task automatic enable_sys_link();
@@ -165,18 +193,18 @@ module soc_ctrl_top_tb;
 
   endtask
 
-  task automatic enable_core_0();
+  task automatic enable_core_0(int fb_div);
     logic [ADDR_WIDTH-1:0] t_addr;
     logic [DATA_WIDTH-1:0] t_data;
     logic [1:0] t_resp;
 
     t_addr = SC_PLL_CONFIG_CORE_0_ADDR;
-    t_data = {'0, 12'h1F4, 4'hA};
+    t_data = {'0, fb_div[11:0], 4'hA};
     soc_ctrl_write_32(t_addr, t_data, t_resp);
 
-    t_addr = SC_CLK_RST_CORE_0_ADDR;
-    t_data = {'0, 1'b0, 1'b1};
-    soc_ctrl_write_32(t_addr, t_data, t_resp);
+    // t_addr = SC_CLK_RST_CORE_0_ADDR;
+    // t_data = {'0, 1'b0, 1'b1};
+    // soc_ctrl_write_32(t_addr, t_data, t_resp);
 
     t_addr = SC_CLK_RST_CORE_0_ADDR;
     t_data = '0;
@@ -188,18 +216,18 @@ module soc_ctrl_top_tb;
 
   endtask
 
-  task automatic enable_core_1();
+  task automatic enable_core_1(int fb_div);
     logic [ADDR_WIDTH-1:0] t_addr;
     logic [DATA_WIDTH-1:0] t_data;
     logic [1:0] t_resp;
 
     t_addr = SC_PLL_CONFIG_CORE_1_ADDR;
-    t_data = {'0, 12'h190, 4'hA};
+    t_data = {'0, fb_div[11:0], 4'hA};
     soc_ctrl_write_32(t_addr, t_data, t_resp);
 
-    t_addr = SC_CLK_RST_CORE_1_ADDR;
-    t_data = {'0, 1'b0, 1'b1};
-    soc_ctrl_write_32(t_addr, t_data, t_resp);
+    // t_addr = SC_CLK_RST_CORE_1_ADDR;
+    // t_data = {'0, 1'b0, 1'b1};
+    // soc_ctrl_write_32(t_addr, t_data, t_resp);
 
     t_addr = SC_CLK_RST_CORE_1_ADDR;
     t_data = '0;
@@ -211,21 +239,17 @@ module soc_ctrl_top_tb;
 
   endtask
 
-  task automatic enable_core_link(logic clk_select);
+  task automatic enable_core_link();
     logic [ADDR_WIDTH-1:0] t_addr;
     logic [DATA_WIDTH-1:0] t_data;
     logic [1:0] t_resp;
 
     t_addr = SC_CLK_RST_CORE_LINK_ADDR;
-    t_data = {'0, clk_select, 1'b0, 1'b1};
+    t_data = {'0, 1'b0, 1'b0};
     soc_ctrl_write_32(t_addr, t_data, t_resp);
 
     t_addr = SC_CLK_RST_CORE_LINK_ADDR;
-    t_data = {'0, clk_select, 1'b0, 1'b0};
-    soc_ctrl_write_32(t_addr, t_data, t_resp);
-
-    t_addr = SC_CLK_RST_CORE_LINK_ADDR;
-    t_data = {'0, clk_select, 1'b1, 1'b1};
+    t_data = {'0, 1'b1, 1'b1};
     soc_ctrl_write_32(t_addr, t_data, t_resp);
 
   endtask
@@ -235,14 +259,18 @@ module soc_ctrl_top_tb;
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   initial begin
-    apply_global_reset();
-    `START_CLK(ref_clk, 100)
-    enable_sys_link();
-    enable_core_0();
-    enable_core_1();
-    enable_core_link(0);
-    #10us;
-    enable_core_link(1);
+    fork
+      apply_global_reset();
+      `START_CLK(ref_clk, 100)
+    join
+    enable_core_0(500);
+    enable_core_1(400);
+    enable_core_link();
+    #3us;
+    @(posedge ref_clk);
+    enable_core_0(300);
+    enable_core_1(400);
+    enable_core_link();
     #10us;
     $finish;
   end

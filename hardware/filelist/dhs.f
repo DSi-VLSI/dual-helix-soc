@@ -13,6 +13,7 @@ ${COMMON_DIR}/rtl/dff.sv
 ${COMMON_DIR}/rtl/edge_detector.sv
 ${COMMON_DIR}/rtl/fifo.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/common/clk_gate.sv
+${DUAL_HELIX_SOC_DIR}/hardware/source/common/dual_flop_sync.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/common/axil_to_simple_if.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/common/clk_div.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/source/uart_top/uart_reg_if.sv
