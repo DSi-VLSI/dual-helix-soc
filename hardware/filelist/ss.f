@@ -1,5 +1,7 @@
 // SOC REPO
 ${SOC_DIR}/source/pll.sv
+${SOC_DIR}/source/clk_mux.sv
+${SOC_DIR}/source/dual_flop_synchronizer.sv
 
 // COMMON REPO
 ${COMMON_DIR}/rtl/gray_to_bin.sv

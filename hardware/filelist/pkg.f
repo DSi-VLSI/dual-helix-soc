@@ -13,4 +13,5 @@ ${CV32E40P_DIR}/rtl/include/cv32e40p_fpu_pkg.sv
 ${CV32E40P_DIR}/rtl/include/cv32e40p_apu_core_pkg.sv
 ${CVFPU_DIR}/src/fpnew_pkg.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/package/dual_helix_pkg.sv
+${DUAL_HELIX_SOC_DIR}/hardware/package/soc_ctrl_pkg.sv
 ${DUAL_HELIX_SOC_DIR}/hardware/package/uart_pkg.sv
