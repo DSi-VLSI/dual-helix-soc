@@ -723,8 +723,8 @@ module dual_helix_soc
       .REF_DIV_BW (REF_DIV_BW),
       .FB_DIV_BW  (FB_DIV_BW)
   ) u_soc_ctrl (
-      .clk_i               (),
-      .arst_ni             (),
+      .ref_clk_i           (),
+      .glb_arst_ni         (),
       .axil_req_i          (periphl_slv_device_axil_req[0]),
       .axil_resp_o         (periphl_slv_device_axil_resp[0]),
       .core_0_boot_addr_o  (),

@@ -1,6 +1,14 @@
+`ifndef DEFAULT_ADDR_WIDTH
+`define DEFAULT_ADDR_WIDTH 32
+`endif
+
+`ifndef DEFAULT_DATA_WIDTH
+`define DEFAULT_DATA_WIDTH 32
+`endif
+
 interface apb_if #(
-    parameter int ADDR_WIDTH = 32,
-    parameter int DATA_WIDTH = 32
+    parameter int ADDR_WIDTH = `DEFAULT_ADDR_WIDTH,
+    parameter int DATA_WIDTH = `DEFAULT_DATA_WIDTH
 ) (
     // Global signals
     input logic arst_ni,  // Asynchronous reset, active low
@@ -22,6 +30,19 @@ interface apb_if #(
   logic                      pslverr;  // Peripheral slave error
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Internal Variables
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  bit                        is_edge_aligned = 0;
+
+  always @(posedge clk_i) begin
+    is_edge_aligned = 1;
+    #1;
+    is_edge_aligned = 0;
+  end
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Methods
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +51,10 @@ interface apb_if #(
                                 input logic [DATA_WIDTH/8-1:0] write_strobe,
                                 output logic [DATA_WIDTH-1:0] read_data);
 
-    @(posedge clk_i);
+    if (!is_edge_aligned) begin
+      @(posedge clk_i);
+    end
+
     // Setup phase
     psel    <= 1'b1;
     penable <= 1'b0;
@@ -45,7 +69,7 @@ interface apb_if #(
     // Enable phase
     penable <= 1'b1;
 
-    do @(posedge clk_i); while (pready !== 1'b1);
+    do @(posedge clk_i); while (!pready);
 
     // Capture read data
     read_data = prdata;
@@ -83,6 +107,40 @@ interface apb_if #(
   task automatic read(input logic [ADDR_WIDTH-1:0] address,
                       output logic [DATA_WIDTH-1:0] read_data);
     read_32(address, read_data);
+  endtask
+
+  task automatic get_transaction(output logic direction, output logic [ADDR_WIDTH-1:0] address,
+                                 output logic [DATA_WIDTH-1:0] write_data,
+                                 output logic [DATA_WIDTH/8-1:0] write_strobe,
+                                 output logic [DATA_WIDTH-1:0] read_data, output logic slverr);
+
+    //Wait for setup phase
+    do @(posedge clk_i); while (!(psel == 1'b1 && penable == 1'b0));
+
+    //Wait for access phase
+    do @(posedge clk_i); while (!(psel == 1'b1 && penable == 1'b1));
+
+    //Update information as long as enable stage high
+    while (psel == 1'b1 && penable == 1'b1) begin
+      direction    = pwrite;
+      address      = paddr;
+      write_data   = pwdata;
+      write_strobe = pstrb;
+      read_data    = prdata;
+      slverr       = pslverr;
+      @(negedge clk_i);
+    end
+
+  endtask
+
+  task automatic wait_till_idle(input int tx_len = 3);
+    int i;
+    i = 0;
+    while (i < tx_len * 2) begin
+      @(posedge clk_i);
+      i++;
+      if (psel == 1) i = 0;
+    end
   endtask
 
 endinterface

@@ -25,6 +25,8 @@ endif
 EW_HL := | grep -E "WARNING:|ERROR:|" --color=auto
 EW_O := | grep -E "WARNING:|ERROR:" --color=auto || true
 
+.DEFAULT_GOAL := help
+
 ####################################################################################################
 # Tools
 ####################################################################################################
@@ -83,7 +85,7 @@ ${LOG_DIR}:
 
 # Macro to compile a file list using XVLOG
 define COMPILE_FLIST
-	echo -e "\033[1;34mCompiling file list: $(shell basename $1):\033[0m ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log"
+	echo -e "  \033[1;34m$(shell basename $1)\033[15G :\033[0m ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log"
 	cd ${BUILD_DIR} && ${XVLOG} -sv -d VERILATOR -d XSIM -f $1 -log ${LOG_DIR}/xvlog_$(shell basename $1 | sed 's/\.f$$//g').log ${EW_O}
 endef
 
@@ -100,6 +102,7 @@ ENV_BUILD:
 	@make -s ${BUILD_DIR}
 	@make -s ${LOG_DIR}
 	@git submodule update --init --depth 1
+	@echo -e "\033[1;33mCompiling:\033[0m"
 	@$(foreach flist,${FILE_LISTS},$(call COMPILE_FLIST,$(flist));)
 	@echo -e "\033[1;33mElaborating ${TOP}:\033[0m ${LOG_DIR}/elab_${TOP}.log"
 	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps ${EW_O}
@@ -151,6 +154,24 @@ print_logo:
 	@echo -e "\033[1;38m  / // / /_/ / __ |/ /__  / _  / _// /___/ /_>  <  _\ \/ /_/ / /__   \033[0m"
 	@echo -e "\033[1;34m /____/\____/_/ |_/____/ /_//_/___/____/___/_/|_| /___/\____/\___/   \033[0m"
 	@echo -e "\033[1;34m                                                                     \033[0m"
+
+.PHONY: help
+help:
+	@echo -e "\033[1;33mAvailable Makefile targets:\033[0m"
+	@echo -e "  \033[1;32mmake clean\033[0m           - Clean build directory"
+	@echo -e "  \033[1;32mmake clean_full\033[0m      - Clean build and log directories"
+	@echo -e "  \033[1;32mmake ENV_BUILD\033[0m       - Perform full environment build"
+	@echo -e "  \033[1;32mmake simulate\033[0m        - Run simulation (set TEST, DEBUG, GUI as needed)"
+	@echo -e "  \033[1;32mmake test TEST=<test.c> HART_ID=<id>\033[0m - Compile and prepare test program"
+	@echo -e "  \033[1;32mmake help\033[0m            - Show this help message"
+	@echo -e "  \033[1;32mmake test_hello_world_x2\033[0m - Run hello world test on dual HARTs"
+	@echo -e "\033[1;33mEnvironment Variables:\033[0m"
+	@echo -e "  \033[1;32mTOP\033[0m        - Top-level testbench module (default: dual_helix_soc_tb)"
+	@echo -e "  \033[1;32mTEST\033[0m       - Test program to run (default: default)"
+	@echo -e "  \033[1;32mDEBUG\033[0m      - Debug mode (0: off, 1: on; default: 0)"
+	@echo -e "  \033[1;32mGUI\033[0m        - GUI mode for simulation (0: off, 1: on; default: 0)"
+	@echo -e "  \033[1;32mHART_ID\033[0m    - HART ID for test program (default: 0)"
+	@echo -e "  \033[1;32mRAM_BDL\033[0m   - RAM block depth multiplier (default: 1)"
 
 ####################################################################################################
 # CUSTOM TARGETS
