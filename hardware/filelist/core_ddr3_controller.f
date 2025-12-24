@@ -17,6 +17,7 @@ ${CORE_DDR3_CONTROLLER_DIR}/src_v/ddr3_axi.v
 
 ////////////////////////////////// TESTBENCH //////////////////////////////////
 
+-i ${DUAL_HELIX_SOC_DIR}/hardware/include
 -i ${AXI_DIR}/include
 ${AXI_DIR}/src/axi_pkg.sv
 ${CORE_DDR3_CONTROLLER_DIR}/tb/ddr3_core_xc7/ddr3.v

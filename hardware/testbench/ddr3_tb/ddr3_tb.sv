@@ -1,107 +1,148 @@
-`timescale 1 ns / 100ps
+// verilog_format: off
+//-----------------------------------------------------------------
+// CLOCK_GEN
+//-----------------------------------------------------------------
+`define CLOCK_GEN(NAME, CYCLE)     \
+    // initial \
+    begin \
+       ``NAME <= 0; \
+       forever # (``CYCLE / 2) ``NAME = ~``NAME; \
+    end
+
+`define CLOCK_GEN_90(NAME, CYCLE)     \
+    // initial \
+    begin \
+       ``NAME <= 0; \
+       # (``CYCLE / 4); \
+       forever # (``CYCLE / 2) ``NAME = ~``NAME; \
+    end
+
+//-----------------------------------------------------------------
+// RESET_GEN
+//-----------------------------------------------------------------
+`define RESET_GEN(NAME, DELAY)     \
+    // initial \
+    begin \
+       ``NAME <= 1; \
+       # ``DELAY    \
+       ``NAME <= 0; \
+    end
+
+//-----------------------------------------------------------------
+// TB_VCD
+//-----------------------------------------------------------------
+`define TB_VCD(TOP, NAME)     \
+    initial \
+    begin \
+       $dumpfile(``NAME);  \
+       $dumpvars(0,``TOP); \
+    end
+
+// verilog_format: on
 
 module ddr3_tb;
 
-  `include "simulation.vh"
   `include "axi/typedef.svh"
+  `include "simple_axi_m_driver.svh"
 
   //-----------------------------------------------------------------
   // Clock / Reset
   //-----------------------------------------------------------------
-  `CLOCK_GEN(osc, 10)  // 100MHz
-  `RESET_GEN(rst, 1000)
+  logic rst;
+  logic clk;
+  logic clk_ddr;
+  logic clk_ref;
+  logic clk_ddr_dqs;
+  event clk_rst_done;
+
+  initial begin
+    `RESET_GEN(rst, 1000)
+    #100ns;
+    fork
+      `CLOCK_GEN(clk, 20)
+      `CLOCK_GEN(clk_ddr, (20 / 4))
+      `CLOCK_GEN(clk_ref, (20 / 2))
+      `CLOCK_GEN_90(clk_ddr_dqs, (20 / 4))
+    join_none
+    repeat (20) @(posedge clk);
+    ->clk_rst_done;
+  end
 
   //-----------------------------------------------------------------
   // Misc
   //-----------------------------------------------------------------
   `TB_VCD(ddr3_tb, "waveform.vcd")
 
-  //-----------------------------------------------------------------
-  // PLL
-  //-----------------------------------------------------------------
-  wire clk;
-  wire clk_ddr;
-  wire clk_ddr_dqs;
-  wire clk_ref;
 
   `AXI_TYPEDEF_ALL(axi, logic [31:0], logic [ 3:0], logic [31:0], logic [3:0], logic)
 
-  axi_req_t         axi_req;
-  axi_resp_t        axi_resp;
+  axi_req_t  axi_req;
+  axi_resp_t axi_resp;
 
-  logic             awvalid;
-  logic      [31:0] awaddr;
-  logic      [ 3:0] awid;
-  logic      [ 7:0] awlen;
-  logic      [ 1:0] awburst;
-  logic             wvalid;
-  logic      [31:0] wdata;
-  logic      [ 3:0] wstrb;
-  logic             wlast;
-  logic             bready;
-  logic             arvalid;
-  logic      [31:0] araddr;
-  logic      [ 3:0] arid;
-  logic      [ 7:0] arlen;
-  logic      [ 1:0] arburst;
-  logic             rready;
-  logic             awready;
-  logic             wready;
-  logic             bvalid;
-  logic      [ 1:0] bresp;
-  logic      [ 3:0] bid;
-  logic             arready;
-  logic             rvalid;
-  logic      [31:0] rdata;
-  logic      [ 1:0] rresp;
-  logic      [ 3:0] rid;
-  logic             rlast;
+  `SIMPLE_AXI_M_DRIVER(axi_dvr, clk, ~rst, axi_req, axi_resp)
 
-  wire       [14:0] dfi_address;
-  wire       [ 2:0] dfi_bank;
-  wire              dfi_cas_n;
-  wire              dfi_cke;
-  wire              dfi_cs_n;
-  wire              dfi_odt;
-  wire              dfi_ras_n;
-  wire              dfi_reset_n;
-  wire              dfi_we_n;
-  wire       [31:0] dfi_wrdata;
-  wire              dfi_wrdata_en;
-  wire       [ 3:0] dfi_wrdata_mask;
-  wire              dfi_rddata_en;
-  wire       [31:0] dfi_rddata;
-  wire              dfi_rddata_valid;
+  logic        awvalid;
+  logic [31:0] awaddr;
+  logic [ 3:0] awid;
+  logic [ 7:0] awlen;
+  logic [ 1:0] awburst;
+  logic        wvalid;
+  logic [31:0] wdata;
+  logic [ 3:0] wstrb;
+  logic        wlast;
+  logic        bready;
+  logic        arvalid;
+  logic [31:0] araddr;
+  logic [ 3:0] arid;
+  logic [ 7:0] arlen;
+  logic [ 1:0] arburst;
+  logic        rready;
+  logic        awready;
+  logic        wready;
+  logic        bvalid;
+  logic [ 1:0] bresp;
+  logic [ 3:0] bid;
+  logic        arready;
+  logic        rvalid;
+  logic [31:0] rdata;
+  logic [ 1:0] rresp;
+  logic [ 3:0] rid;
+  logic        rlast;
 
-  wire              ddr3_clk_w;
-  wire              ddr3_cke_w;
-  wire              ddr3_reset_n_w;
-  wire              ddr3_ras_n_w;
-  wire              ddr3_cas_n_w;
-  wire              ddr3_we_n_w;
-  wire              ddr3_cs_n_w;
-  wire       [ 2:0] ddr3_ba_w;
-  wire       [13:0] ddr3_addr_w;
-  wire              ddr3_odt_w;
-  wire       [ 1:0] ddr3_dm_w;
-  wire       [ 1:0] ddr3_dqs_w;
-  wire       [15:0] ddr3_dq_w;
+  wire  [14:0] dfi_address;
+  wire  [ 2:0] dfi_bank;
+  wire         dfi_cas_n;
+  wire         dfi_cke;
+  wire         dfi_cs_n;
+  wire         dfi_odt;
+  wire         dfi_ras_n;
+  wire         dfi_reset_n;
+  wire         dfi_we_n;
+  wire  [31:0] dfi_wrdata;
+  wire         dfi_wrdata_en;
+  wire  [ 3:0] dfi_wrdata_mask;
+  wire         dfi_rddata_en;
+  wire  [31:0] dfi_rddata;
+  wire         dfi_rddata_valid;
 
-  wire              ddr3_ck_p_w;
-  wire              ddr3_ck_n_w;
-  wire       [ 1:0] ddr3_dqs_p_w;
-  wire       [ 1:0] ddr3_dqs_n_w;
+  wire         ddr3_clk_w;
+  wire         ddr3_cke_w;
+  wire         ddr3_reset_n_w;
+  wire         ddr3_ras_n_w;
+  wire         ddr3_cas_n_w;
+  wire         ddr3_we_n_w;
+  wire         ddr3_cs_n_w;
+  wire  [ 2:0] ddr3_ba_w;
+  wire  [13:0] ddr3_addr_w;
+  wire         ddr3_odt_w;
+  wire  [ 1:0] ddr3_dm_w;
+  wire  [ 1:0] ddr3_dqs_w;
+  wire  [15:0] ddr3_dq_w;
 
-
-  artix7_pll u_pll (
-      .clkref_i(osc)
-
-      // Outputs
-      , .clkout0_o(clk)          // 100
-      , .clkout1_o(clk_ddr)      // 400
-      , .clkout2_o(clk_ref)      // 200
-      , .clkout3_o(clk_ddr_dqs)  // 400 (phase 90)
-  );
+  wire         ddr3_ck_p_w;
+  wire         ddr3_ck_n_w;
+  wire  [ 1:0] ddr3_dqs_p_w;
+  wire  [ 1:0] ddr3_dqs_n_w;
 
   ddr3_axi #(
       .DDR_MHZ          (100),
@@ -198,24 +239,24 @@ module ddr3_tb;
       , .ddr3_dq_io(ddr3_dq_w)
   );
 
-  ddr3 u_ram (
-      .rst_n(ddr3_reset_n_w)
-      , .ck(ddr3_ck_p_w)
-      , .ck_n(ddr3_ck_n_w)
-      , .cke(ddr3_cke_w)
-      , .cs_n(ddr3_cs_n_w)
-      , .ras_n(ddr3_ras_n_w)
-      , .cas_n(ddr3_cas_n_w)
-      , .we_n(ddr3_we_n_w)
-      , .dm_tdqs(ddr3_dm_w)
-      , .ba(ddr3_ba_w)
-      , .addr(ddr3_addr_w)
-      , .dq(ddr3_dq_w)
-      , .dqs(ddr3_dqs_p_w)
-      , .dqs_n(ddr3_dqs_n_w)
-      , .tdqs_n()
-      , .odt(ddr3_odt_w)
-  );
+  // ddr3 u_ram (
+  //     .rst_n(ddr3_reset_n_w)
+  //     , .ck(ddr3_ck_p_w)
+  //     , .ck_n(ddr3_ck_n_w)
+  //     , .cke(ddr3_cke_w)
+  //     , .cs_n(ddr3_cs_n_w)
+  //     , .ras_n(ddr3_ras_n_w)
+  //     , .cas_n(ddr3_cas_n_w)
+  //     , .we_n(ddr3_we_n_w)
+  //     , .dm_tdqs(ddr3_dm_w)
+  //     , .ba(ddr3_ba_w)
+  //     , .addr(ddr3_addr_w)
+  //     , .dq(ddr3_dq_w)
+  //     , .dqs(ddr3_dqs_p_w)
+  //     , .dqs_n(ddr3_dqs_n_w)
+  //     , .tdqs_n()
+  //     , .odt(ddr3_odt_w)
+  // );
 
   always_comb begin
     axi_resp          = '0;
@@ -253,7 +294,18 @@ module ddr3_tb;
     rready            = axi_req.r_ready;
   end
 
-
+  initial begin
+    int addr, data;
+    logic [1:0] resp;
+    @clk_rst_done;
+    $display("CLK RST DONE. COMMENCING TEST");
+    @(posedge clk);
+    addr = 'h00000000;
+    data = 'hDA;
+    axi_dvr_write_32(addr, data, resp);
+    addr = 'h00000000;
+    axi_dvr_read_32(addr, data, resp);
+  end
 
   initial begin
 
