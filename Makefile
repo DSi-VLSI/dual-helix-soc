@@ -1,6 +1,10 @@
 .SHELL: /bin/bash
 export SHELL=/bin/bash
 
+ifeq ($(VIVADO_PATH),)
+  ${error VIVADO_PATH needs to be specified}
+endif
+
 # Makefile for Dual Helix SoC
 # This Makefile provides targets for building, simulating, and testing the Dual Helix SoC.
 # It uses Xilinx Vivado tools for compilation and simulation.
@@ -44,14 +48,15 @@ RISCV64_OBJDUMP ?= riscv64-unknown-elf-objdump
 # Directories
 ####################################################################################################
 
-export DUAL_HELIX_SOC_DIR := $(CURDIR)
-export APB_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/apb
-export AXI_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/axi
-export COMMON_CELLS_DIR   := $(DUAL_HELIX_SOC_DIR)/submodule/common_cells
-export COMMON_DIR         := $(DUAL_HELIX_SOC_DIR)/submodule/common
-export CV32E40P_DIR       := $(DUAL_HELIX_SOC_DIR)/submodule/cv32e40p
-export CVFPU_DIR          := $(DUAL_HELIX_SOC_DIR)/submodule/cvfpu
-export SOC_DIR            := $(DUAL_HELIX_SOC_DIR)/submodule/SoC
+export DUAL_HELIX_SOC_DIR       := $(CURDIR)
+export APB_DIR                  := $(DUAL_HELIX_SOC_DIR)/submodule/apb
+export AXI_DIR                  := $(DUAL_HELIX_SOC_DIR)/submodule/axi
+export COMMON_CELLS_DIR         := $(DUAL_HELIX_SOC_DIR)/submodule/common_cells
+export COMMON_DIR               := $(DUAL_HELIX_SOC_DIR)/submodule/common
+export CV32E40P_DIR             := $(DUAL_HELIX_SOC_DIR)/submodule/cv32e40p
+export CVFPU_DIR                := $(DUAL_HELIX_SOC_DIR)/submodule/cvfpu
+export SOC_DIR                  := $(DUAL_HELIX_SOC_DIR)/submodule/SoC
+export CORE_DDR3_CONTROLLER_DIR := $(DUAL_HELIX_SOC_DIR)/submodule/core_ddr3_controller
 
 BUILD_DIR                 := $(DUAL_HELIX_SOC_DIR)/build
 LOG_DIR                   := $(DUAL_HELIX_SOC_DIR)/log
