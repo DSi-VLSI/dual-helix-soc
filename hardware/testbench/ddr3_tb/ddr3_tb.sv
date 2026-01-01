@@ -6,7 +6,7 @@
     // initial \
     begin \
        ``NAME <= 0; \
-       forever # (``CYCLE / 2) ``NAME = ~``NAME; \
+       forever # (``CYCLE / 2) ``NAME <= ~``NAME; \
     end
 
 `define CLOCK_GEN_90(NAME, CYCLE)     \
@@ -14,7 +14,7 @@
     begin \
        ``NAME <= 0; \
        # (``CYCLE / 4); \
-       forever # (``CYCLE / 2) ``NAME = ~``NAME; \
+       forever # (``CYCLE / 2) ``NAME <= ~``NAME; \
     end
 
 //-----------------------------------------------------------------
@@ -48,25 +48,14 @@ module ddr3_tb;
   //-----------------------------------------------------------------
   // Clock / Reset
   //-----------------------------------------------------------------
-  logic rst;
-  logic clk;
-  logic clk_ddr;
-  logic clk_ref;
-  logic clk_ddr_dqs;
-  event clk_rst_done;
-
-  initial begin
-    `RESET_GEN(rst, 1000)
-    #100ns;
-    fork
-      `CLOCK_GEN(clk, 20)
-      `CLOCK_GEN(clk_ddr, (20 / 4))
-      `CLOCK_GEN(clk_ref, (20 / 2))
-      `CLOCK_GEN_90(clk_ddr_dqs, (20 / 4))
-    join_none
-    repeat (20) @(posedge clk);
-    ->clk_rst_done;
-  end
+  logic        rst;
+  logic        clk;
+  logic        clk_ddr;
+  logic        clk_ref;
+  logic        clk_ddr_dqs;
+  event        clk_rst_done;
+  logic        cfg_valid;
+  logic [31:0] cfg;
 
   //-----------------------------------------------------------------
   // Misc
@@ -206,6 +195,8 @@ module ddr3_tb;
       , .clk_ddr90_i(clk_ddr_dqs)
       , .clk_ref_i(clk_ref)
       , .rst_i(rst)
+      , .cfg_valid_i(cfg_valid)
+      , .cfg_i(cfg)
       , .dfi_address_i(dfi_address)
       , .dfi_bank_i(dfi_bank)
       , .dfi_cas_n_i(dfi_cas_n)
@@ -239,24 +230,24 @@ module ddr3_tb;
       , .ddr3_dq_io(ddr3_dq_w)
   );
 
-  // ddr3 u_ram (
-  //     .rst_n(ddr3_reset_n_w)
-  //     , .ck(ddr3_ck_p_w)
-  //     , .ck_n(ddr3_ck_n_w)
-  //     , .cke(ddr3_cke_w)
-  //     , .cs_n(ddr3_cs_n_w)
-  //     , .ras_n(ddr3_ras_n_w)
-  //     , .cas_n(ddr3_cas_n_w)
-  //     , .we_n(ddr3_we_n_w)
-  //     , .dm_tdqs(ddr3_dm_w)
-  //     , .ba(ddr3_ba_w)
-  //     , .addr(ddr3_addr_w)
-  //     , .dq(ddr3_dq_w)
-  //     , .dqs(ddr3_dqs_p_w)
-  //     , .dqs_n(ddr3_dqs_n_w)
-  //     , .tdqs_n()
-  //     , .odt(ddr3_odt_w)
-  // );
+  ddr3 u_ram (
+      .rst_n(ddr3_reset_n_w)
+      , .ck(ddr3_ck_p_w)
+      , .ck_n(ddr3_ck_n_w)
+      , .cke(ddr3_cke_w)
+      , .cs_n(ddr3_cs_n_w)
+      , .ras_n(ddr3_ras_n_w)
+      , .cas_n(ddr3_cas_n_w)
+      , .we_n(ddr3_we_n_w)
+      , .dm_tdqs(ddr3_dm_w)
+      , .ba(ddr3_ba_w)
+      , .addr(ddr3_addr_w)
+      , .dq(ddr3_dq_w)
+      , .dqs(ddr3_dqs_p_w)
+      , .dqs_n(ddr3_dqs_n_w)
+      , .tdqs_n()
+      , .odt(ddr3_odt_w)
+  );
 
   always_comb begin
     axi_resp          = '0;
@@ -295,21 +286,62 @@ module ddr3_tb;
   end
 
   initial begin
-    int addr, data;
-    logic [1:0] resp;
+    cfg_valid <= '0;
+    cfg <= '0;
+    axi_req <= '0;
+    rst <= '0;
+    fork
+      `CLOCK_GEN(clk, 20)
+      `CLOCK_GEN(clk_ddr, (20 / 4))
+      `CLOCK_GEN(clk_ref, (20 / 2))
+      `CLOCK_GEN_90(clk_ddr_dqs, (20 / 4))
+    join_none
+    #100ns;
+    `RESET_GEN(rst, 1000)
+    repeat (20) @(posedge clk);
+    ->clk_rst_done;
+  end
+
+  initial begin
+    automatic int addr, data;
+    automatic logic [1:0] resp;
+    automatic semaphore sem1 = new(1);
     @clk_rst_done;
     $display("CLK RST DONE. COMMENCING TEST");
     @(posedge clk);
-    addr = 'h00000000;
-    data = 'hDA;
-    axi_dvr_write_32(addr, data, resp);
-    addr = 'h00000000;
-    axi_dvr_read_32(addr, data, resp);
+    fork
+      begin
+        sem1.get();
+        addr = 'h00000000;
+        data = 'hDA;
+        fork
+          axi_dvr_write_32(addr, data, resp);
+          // repeat (20000) begin
+          //   @(posedge clk);
+          // end
+        join_any
+        sem1.put();
+      end
+      begin
+        sem1.get();
+        addr = 'h00000000;
+        repeat (1000) begin
+          @(posedge clk);
+        end
+        fork
+          axi_dvr_read_32(addr, data, resp);
+          // repeat (20000) begin
+          //   @(posedge clk);
+          // end
+        join_any
+        sem1.put();
+      end
+    join
   end
 
   initial begin
 
-    #1000ns;
+    #5000ns;
     $finish;
 
   end
