@@ -286,6 +286,10 @@ module ddr3_tb;
   end
 
   initial begin
+    automatic int addr, data;
+    automatic logic [1:0] resp;
+    automatic semaphore sem1 = new(1);
+
     clk         <= '0;
     clk_ddr     <= '0;
     clk_ref     <= '0;
@@ -308,31 +312,21 @@ module ddr3_tb;
     #200ns;
 
     fork
-      `CLOCK_GEN(clk, 20)
-      `CLOCK_GEN(clk_ddr, (20 / 4))
-      `CLOCK_GEN(clk_ref, (20 / 2))
-      `CLOCK_GEN_90(clk_ddr_dqs, (20 / 4))
+      fork
+        `CLOCK_GEN(clk, 20)
+        `CLOCK_GEN(clk_ddr, (20 / 4))
+        `CLOCK_GEN(clk_ref, (20 / 2))
+        `CLOCK_GEN_90(clk_ddr_dqs, (20 / 4))
+      join_none
       begin
         #100ns;
-        `RESET_GEN(rst, 10000)
+        `RESET_GEN(rst, 4995)
       end
-    join_none
-
+    join
 
     repeat (20) @(posedge clk);
-    ->clk_rst_done;
-  end
-
-  initial begin
-    automatic int addr, data;
-    automatic logic [1:0] resp;
-    automatic semaphore sem1 = new(1);
-
-    @clk_rst_done;
 
     $display("CLK RST DONE. COMMENCING TEST");
-
-    @(posedge clk);
 
     fork
       begin
@@ -340,35 +334,36 @@ module ddr3_tb;
         addr = 'h00000010;
         data = 'hDA;
         fork
-          axi_dvr_write_32(addr, data, resp);
+          begin
+            @(posedge clk);
+            axi_dvr_write_32(addr, data, resp);
+          end
           // repeat (20000) begin
           //   @(posedge clk);
           // end
         join_any
         sem1.put();
       end
-      begin
-        sem1.get();
-        addr = 'h00000010;
-        repeat (1000) begin
-          @(posedge clk);
-        end
-        fork
-          axi_dvr_read_32(addr, data, resp);
-          // repeat (20000) begin
-          //   @(posedge clk);
-          // end
-        join_any
-        sem1.put();
-      end
+      // begin
+      //   sem1.get();
+      //   addr = 'h00000010;
+      //   repeat (1000) begin
+      //     @(posedge clk);
+      //   end
+      //   fork
+      //     axi_dvr_read_32(addr, data, resp);
+      //     // repeat (20000) begin
+      //     //   @(posedge clk);
+      //     // end
+      //   join_any
+      //   sem1.put();
+      // end
     join
   end
 
   initial begin
-
     #50000ns;
     $finish;
-
   end
 
 endmodule
