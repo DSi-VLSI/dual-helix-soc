@@ -5,7 +5,7 @@
 `define CLOCK_GEN(NAME, CYCLE)     \
     // initial \
     begin \
-       ``NAME <= 0; \
+       ``NAME <= 1; \
        forever # (``CYCLE / 2) ``NAME <= ~``NAME; \
     end
 
@@ -286,18 +286,39 @@ module ddr3_tb;
   end
 
   initial begin
-    cfg_valid <= '0;
-    cfg <= '0;
-    axi_req <= '0;
-    rst <= '0;
+    clk         <= '0;
+    clk_ddr     <= '0;
+    clk_ref     <= '0;
+    clk_ddr_dqs <= '0;
+    cfg_valid   <= '0;
+    cfg         <= '0;
+    axi_req     <= '0;
+    rst         <= '1;
+
+    #50ns;
+    clk         <= '1;
+    clk_ddr     <= '1;
+    clk_ref     <= '1;
+    clk_ddr_dqs <= '1;
+    #5ns;
+    clk         <= '0;
+    clk_ddr     <= '0;
+    clk_ref     <= '0;
+    clk_ddr_dqs <= '0;
+    #200ns;
+
     fork
       `CLOCK_GEN(clk, 20)
       `CLOCK_GEN(clk_ddr, (20 / 4))
       `CLOCK_GEN(clk_ref, (20 / 2))
       `CLOCK_GEN_90(clk_ddr_dqs, (20 / 4))
+      begin
+        #100ns;
+        `RESET_GEN(rst, 10000)
+      end
     join_none
-    #100ns;
-    `RESET_GEN(rst, 1000)
+
+
     repeat (20) @(posedge clk);
     ->clk_rst_done;
   end
@@ -306,13 +327,17 @@ module ddr3_tb;
     automatic int addr, data;
     automatic logic [1:0] resp;
     automatic semaphore sem1 = new(1);
+
     @clk_rst_done;
+
     $display("CLK RST DONE. COMMENCING TEST");
+
     @(posedge clk);
+
     fork
       begin
         sem1.get();
-        addr = 'h00000000;
+        addr = 'h00000010;
         data = 'hDA;
         fork
           axi_dvr_write_32(addr, data, resp);
@@ -324,7 +349,7 @@ module ddr3_tb;
       end
       begin
         sem1.get();
-        addr = 'h00000000;
+        addr = 'h00000010;
         repeat (1000) begin
           @(posedge clk);
         end
@@ -341,7 +366,7 @@ module ddr3_tb;
 
   initial begin
 
-    #5000ns;
+    #50000ns;
     $finish;
 
   end

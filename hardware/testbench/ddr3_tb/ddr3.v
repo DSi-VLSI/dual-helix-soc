@@ -1109,9 +1109,9 @@ endfunction
 
         if (!$value$plusargs("model_data+%s", tmp_model_dir))
         begin
-            tmp_model_dir = "/tmp";
+            tmp_model_dir = ".";
             $display(
-                "%m: at time %t WARNING: no +model_data option specified, using /tmp.",
+                "%m: at time %t WARNING: no +model_data option specified, using build.",
                 $time
             );
         end

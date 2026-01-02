@@ -62,6 +62,8 @@ BUILD_DIR                 := $(DUAL_HELIX_SOC_DIR)/build
 LOG_DIR                   := $(DUAL_HELIX_SOC_DIR)/log
 FILE_LISTS                := $(shell find $(DUAL_HELIX_SOC_DIR)/hardware/filelist -type f -name "pkg.f")
 FILE_LISTS                += $(shell find $(DUAL_HELIX_SOC_DIR)/hardware/filelist -type f -name "*.f" ! -name "pkg.f")
+DDR3_PRJ                  := $(DUAL_HELIX_SOC_DIR)/hardware/filelist/ddr3_axi_prj.prj 
+
 
 ####################################################################################################
 # Rules
@@ -110,7 +112,7 @@ ENV_BUILD:
 	@echo -e "\033[1;33mCompiling:\033[0m"
 	@$(foreach flist,${FILE_LISTS},$(call COMPILE_FLIST,$(flist));)
 	@echo -e "\033[1;33mElaborating ${TOP}:\033[0m ${LOG_DIR}/elab_${TOP}.log"
-	@cd ${BUILD_DIR} && ${XELAB} ${TOP} --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps ${EW_O}
+	@cd ${BUILD_DIR} && ${XELAB} -prj ${DDR3_PRJ} -L secureip -L unisims_ver -L unimacro_ver ${TOP} glbl --debug all -s ${TOP} -log ${LOG_DIR}/elab_${TOP}.log --timescale 1ns/1ps ${EW_O}
 	@sha256sum $$(find hardware -type f) > ${BUILD_DIR}/build_$(TOP)
 
 # Target to ensure the build is up to date
