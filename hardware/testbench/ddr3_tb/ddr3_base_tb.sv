@@ -333,17 +333,17 @@ module ddr3_base_tb;
     ram_write(32, 128'hffffffff111111112222222233333333, 16'hFFFF);
 
     ram_read(0, data);
-    if (data != 128'hffeeddccbbaa99887766554433221100) begin
+    if (data !== 128'hffeeddccbbaa99887766554433221100) begin
       $error(1, "ERROR: Data mismatch!");
     end
 
     ram_read(16, data);
-    if (data != 128'hbeaffeadd0d0600d5555AAAA00000000) begin
+    if (data !== 128'hbeaffeadd0d0600d5555AAAA00000000) begin
       $error(1, "ERROR: Data mismatch!");
     end
 
     ram_read(32, data);
-    if (data != 128'hffffffff111111112222222233333333) begin
+    if (data !== 128'hffffffff111111112222222233333333) begin
       $error(1, "ERROR: Data mismatch!");
     end
 
